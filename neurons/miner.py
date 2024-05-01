@@ -1,7 +1,7 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# developer: dubm
+# Copyright © 2023 Bitmind
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -26,6 +26,7 @@ import template
 
 # import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
+from bitmind.protocol import ImageSynapse
 
 
 class Miner(BaseMinerNeuron):
@@ -40,26 +41,26 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # TODO(developer): Anything specific to your use case you can do here
+        # TODO: prep miner model(s)
+        # TODO: what else?
 
     async def forward(
-        self, synapse: template.protocol.Dummy
-    ) -> template.protocol.Dummy:
+        self, synapse: ImageSynapse
+    ) -> ImageSynapse:
         """
-        Processes the incoming 'Dummy' synapse by performing a predefined operation on the input data.
-        This method should be replaced with actual logic relevant to the miner's purpose.
+        Processes the incoming ImageSynapse, running each image in the 'images' field through TODO deepfake
+        detection model(s)
 
         Args:
-            synapse (template.protocol.Dummy): The synapse object containing the 'dummy_input' data.
+            synapse (ImageSynapse): The synapse object containing the list of b64 encoded images in the
+            'images' field.
 
         Returns:
-            template.protocol.Dummy: The synapse object with the 'dummy_output' field set to twice the 'dummy_input' value.
+            ImageSynapse: The synapse object with the 'predictions' field populated with a list of probabilities
 
-        The 'forward' function is a placeholder and should be overridden with logic that is appropriate for
-        the miner's intended operation. This method demonstrates a basic transformation of input data.
         """
-        # TODO(developer): Replace with actual implementation logic.
-        synapse.dummy_output = synapse.dummy_input * 2
+        # TODO: Replace hardcoded probabilities with real model outputs
+        synapse.predictions = [0.5] * len(synapse.images)
         return synapse
 
     async def blacklist(
