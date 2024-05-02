@@ -19,6 +19,8 @@
 
 import bittensor as bt
 import torch
+import base64
+import os
 
 from template.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse
@@ -39,9 +41,23 @@ async def forward(self):
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    # TODO load and encode images
+    # TODO decide how we get images, CIFAKE dataset etc. and/or model gen
+    image_dir = './data'
+    image_files = ['pope_FAKE.jpg', 'tahoe_REAL.jpg']
+
     b64_images = []
-    labels = torch.FloatTensor([])
+    labels = []
+    for image_file in image_files:
+        label_str = image_file.split('_')[1].split('.')[0]
+        label = 1 if label_str == 'FAKE' else 0
+        labels.append(label)
+
+        image_abspath = os.path.join(image_dir, image_file)
+        with open(image_abspath, "rb") as fin:
+            b64_image = base64.b64encode(fin.read()).decode('utf-8')
+            b64_images.append(b64_image)
+
+    labels = torch.FloatTensor(labels)
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
