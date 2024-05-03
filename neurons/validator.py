@@ -17,9 +17,10 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-
+from diffusers import DiffusionPipeline
 import bittensor as bt
 import time
+import torch
 
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
@@ -39,6 +40,13 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
+
+        self.diffuser = DiffusionPipeline.from_pretrained(
+            "stabilityai/stable-diffusion-xl-base-1.0",
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+            variant="fp16")
+        #self.diffuser.to("cuda")
 
         # TODO(developer): Anything specific to your use case you can do here
 
