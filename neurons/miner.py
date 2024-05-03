@@ -61,14 +61,19 @@ class Miner(BaseMinerNeuron):
         """
         print("RECEIVED", len(synapse.images), 'IMAGES')
 
-        for b64_image in synapse.images:
+        for i, b64_image in enumerate(synapse.images):
             image_bytes = base64.b64decode(b64_image)
             image = Image.open(io.BytesIO(image_bytes))
             x = np.array(image, dtype=np.float64)
             x = cv2.resize(x, (256, 256), interpolation=cv2.INTER_AREA)
             x /= 255.0
             x = np.expand_dims(x, axis=0)
-            probs = self.model.predict(x)[0]
+            try:
+                probs = self.model.predict(x)[0]
+            except Exception as e:
+                print(f"ERROR: image {i} failed")
+                print(e)
+
             synapse.predictions.append(probs[0])
 
         print("PREDICTIONS:", synapse.predictions)
