@@ -52,7 +52,8 @@ class ImageSynapse(bt.Synapse):
     # Required request input, filled by sending dendrite caller.
     images: List[str] = pydantic.Field(
         title="Images",
-        description="A list of base64 encoded images to check"
+        description="A list of base64 encoded images to check",
+        allow_mutation=False
     )
 
     # Optional request output, filled by receiving axon.
@@ -63,9 +64,8 @@ class ImageSynapse(bt.Synapse):
 
     def deserialize(self) -> List[float]:
         """
-        Deserialize the dummy output. This method retrieves the response from
-        the miner in the form of dummy_output, deserializes it and returns it
-        as the output of the dendrite.query() call.
+        Deserialize the output. This method retrieves the response from
+        the miner, deserializes it and returns it as the output of the dendrite.query() call.
 
         Returns:
         - List[float]: The deserialized response, which in this case is the list of deepfake
