@@ -17,14 +17,16 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from tensorflow.keras.models import load_model
+from PIL import Image
+import bittensor as bt
+import numpy as np
+import base64
 import time
 import typing
-import bittensor as bt
+import cv2
+import io
 
-# Bittensor Miner Template:
-import template
-
-# import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
 from bitmind.protocol import ImageSynapse
 
@@ -40,8 +42,7 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        # TODO: prep miner model(s)
-        # TODO: what else?
+        self.model = load_model(r'./deepfake_detection_model.h5')  # todo put model path in config
 
     async def forward(
         self, synapse: ImageSynapse
@@ -58,8 +59,20 @@ class Miner(BaseMinerNeuron):
             ImageSynapse: The synapse object with the 'predictions' field populated with a list of probabilities
 
         """
-        # TODO: Replace hardcoded probabilities with real model outputs
-        synapse.predictions = [0.5] * len(synapse.images)
+        print("RECEIVED", len(synapse.images), 'IMAGES')
+
+        for b64_image in synapse.images:
+            image_bytes = base64.b64decode(b64_image)
+            image = Image.open(io.BytesIO(image_bytes))
+            x = np.array(image, dtype=np.float64)
+            x = cv2.resize(x, (256, 256), interpolation=cv2.INTER_AREA)
+            x /= 255.0
+            x = np.expand_dims(x, axis=0)
+            probs = self.model.predict(x)[0]
+            synapse.predictions.append(probs[0])
+
+        print("PREDICTIONS:", synapse.predictions)
+
         return synapse
 
     async def blacklist(
@@ -74,7 +87,7 @@ class Miner(BaseMinerNeuron):
         requests before they are deserialized to avoid wasting resources on requests that will be ignored.
 
         Args:
-            synapse (template.protocol.Dummy): A synapse object constructed from the headers of the incoming request.
+            synapse (ImageSynapse): A synapse object constructed from the headers of the incoming request.
 
         Returns:
             Tuple[bool, str]: A tuple containing a boolean indicating whether the synapse's hotkey is blacklisted,
@@ -127,7 +140,7 @@ class Miner(BaseMinerNeuron):
         This implementation assigns priority to incoming requests based on the calling entity's stake in the metagraph.
 
         Args:
-            synapse (template.protocol.Dummy): The synapse object that contains metadata about the incoming request.
+            synapse (ImageSynapse): The synapse object that contains metadata about the incoming request.
 
         Returns:
             float: A priority score derived from the stake of the calling entity.
@@ -143,13 +156,18 @@ class Miner(BaseMinerNeuron):
         caller_uid = self.metagraph.hotkeys.index(
             synapse.dendrite.hotkey
         )  # Get the caller index.
+
         prirority = float(
             self.metagraph.S[caller_uid]
         )  # Return the stake as the priority.
         bt.logging.trace(
             f"Prioritizing {synapse.dendrite.hotkey} with value: ", prirority
         )
+        print(caller_uid, '-->', prirority)
         return prirority
+
+    def save_state(self):
+        pass
 
 
 # This is the main function, which runs the miner.
