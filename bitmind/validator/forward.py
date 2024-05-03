@@ -18,13 +18,14 @@
 # DEALINGS IN THE SOFTWARE.
 
 import bittensor as bt
+import numpy as np
 import torch
 import base64
 import os
 
 from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse
-from bitmind.validator.reward import get_rewards
+from bitmind.validator.reward import get_rewards, reward
 
 
 async def forward(self):
@@ -41,26 +42,44 @@ async def forward(self):
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    # TODO decide how we get images, CIFAKE dataset etc. and/or model gen
     image_dir = '/Users/duys/proj/bitmind/bitmind-subnet/bitmind/data'
-    image_files = ['pope_FAKE.jpg', 'tahoe_REAL.jpg']
+    #image_files = ['pope_FAKE.jpg', 'tahoe_REAL.jpg']
+
+    """
+    placeholder logic for getting labels and sampling real and fake images
+    
+    TODO set up models for generating fake images
+    TODO data augmentation for real images
+    """
+    prompt = "An astronaut riding a green horse"
+    images = self.diffuser(prompt=prompt).images[0]
+    print(images)
+
+    image_files = np.array(os.listdir(image_dir))
+    labels = np.array([
+        1 if f.split('_')[-1].split('.')[0] == 'FAKE'
+        else 0 for f in image_files
+    ])
+
+    k_fake = 10
+    k_real = 10
+    fake_idx = np.random.choice(np.where(labels == 0)[0], k_fake)
+    real_idx = np.random.choice(np.where(labels == 1)[0], k_real)
+    idx = np.concatenate([real_idx, fake_idx])
+    np.random.shuffle(idx)
+
+    image_files = image_files[idx]
+    labels = torch.FloatTensor(labels[idx])
 
     b64_images = []
-    labels = []
     for image_file in image_files:
-        label_str = image_file.split('_')[1].split('.')[0]
-        label = 1 if label_str == 'FAKE' else 0
-        labels.append(label)
-
         image_abspath = os.path.join(image_dir, image_file)
         with open(image_abspath, "rb") as fin:
             b64_image = base64.b64encode(fin.read()).decode('utf-8')
             b64_images.append(b64_image)
 
-    labels = torch.FloatTensor(labels)
-
-    for uid in miner_uids:
-        print("miner", uid, ":", self.metagraph.axons[uid])
+    #for uid in miner_uids:
+    #    print("miner", uid, ":", self.metagraph.axons[uid])
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
@@ -72,14 +91,18 @@ async def forward(self):
         # You are encouraged to define your own deserialization function.
         deserialize=True,
     )
-    print(responses)
+
+    for image, label, pred in zip(image_files, labels, responses[0]):
+        s = '[INCORRECT]' if np.round(pred) != label else '\t  '
+        print(s, image, label, pred)
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")
-
     # TODO why is self passed here in the bittensor template? overkill for moving response to device
-    rewards = get_rewards(labels=labels, responses=responses)
+    rewards, metrics = get_rewards(labels=labels, responses=responses)
     print(rewards)
+    print(metrics)
+
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
