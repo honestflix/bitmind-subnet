@@ -1,2 +1,8 @@
 bittensor
 torch
+scikit-learn
+loguru
+tensorflow
+opencv-python
+numpy
+pillow

@@ -1,7 +1,7 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# developer: dubm
+# Copyright © 2023 Bitmind
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -18,17 +18,11 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+import bittensor as bt
 import time
 
-# Bittensor
-import bittensor as bt
-
-# Bittensor Validator Template:
-import template
-from template.validator import forward
-
-# import base validator class which takes care of most of the boilerplate
-from template.base.validator import BaseValidatorNeuron
+from bitmind.validator import forward
+from bitmind.base.validator import BaseValidatorNeuron
 
 
 class Validator(BaseValidatorNeuron):
