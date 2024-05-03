@@ -29,7 +29,7 @@ from bitmind.protocol import ImageSynapse
 
 def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
     """
-    Reward the miner response to the dummy request. This method returns a reward
+    Reward the miner response to the request. This method returns a reward
     value for the miner, which is used to update the miner's score.
 
     Returns:
@@ -43,12 +43,14 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
     f1 = f1_score(y_true, preds)
     ap_score = average_precision_score(y_true, y_pred)
 
-    res = {'fp_score': 1 - fp / len(y_pred),
-           'f1_score': f1,
-           'ap_score': ap_score}
+    metrics = {
+        'fp_score': 1 - fp / len(y_pred),
+        'f1_score': f1,
+        'ap_score': ap_score
+    }
 
-    reward_val = sum([v for v in res.values()]) / len(res)
-    return reward_val, res
+    reward_val = sum([v for v in metrics.values()]) / len(metrics)
+    return reward_val, metrics
 
 
 def count_penalty(y_pred: np.array) -> float:
@@ -58,8 +60,8 @@ def count_penalty(y_pred: np.array) -> float:
 
 def get_rewards(
         labels: torch.FloatTensor,
-        responses: List[ImageSynapse],
-) -> Tuple[torch.FloatTensor, List]:
+        responses: List[float],
+) -> torch.FloatTensor:
     """
     Returns a tensor of rewards for the given query and responses.
 
@@ -70,19 +72,17 @@ def get_rewards(
     Returns:
     - torch.FloatTensor: A tensor of rewards for the given query and responses.
     """
-    # Get all the reward results by iteratively calling your reward() function.
-    predictions_list = [synapse.predictions for synapse in responses]
-
     rewards = []
     metrics = []
-    for uid in range(len(predictions_list)):
+
+    for uid in range(len(responses)):
         try:
-            if not predictions_list[uid] or len(predictions_list[uid]) != len(labels):
+            if not responses[uid] or len(responses[uid]) != len(labels):
                 rewards.append(0)
                 metrics.append({'fp_score': 0, 'f1_score': 0, 'ap_score': 0, 'penalty': 1})
                 continue
 
-            predictions_array = np.array(predictions_list[uid])
+            predictions_array = np.array(responses[uid])
             miner_reward, metric = reward(predictions_array, labels)
             penalty = count_penalty(predictions_array)
             miner_reward *= penalty
@@ -92,10 +92,10 @@ def get_rewards(
 
         except Exception as e:
             bt.logging.error("Couldn't count miner reward for {}, his predictions = {} and his labels = {}".format(
-                uid, predictions_list[uid], labels))
+                uid, responses[uid], labels))
 
             bt.logging.exception(e)
             rewards.append(0)
             metrics.append({'fp_score': 0, 'f1_score': 0, 'ap_score': 0, 'penalty': 1})
 
-    return torch.FloatTensor(rewards), metrics
+    return torch.FloatTensor(rewards)#, metrics
