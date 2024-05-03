@@ -22,7 +22,7 @@ import torch
 import base64
 import os
 
-from template.utils.uids import get_random_uids
+from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse
 from bitmind.validator.reward import get_rewards
 
@@ -42,7 +42,7 @@ async def forward(self):
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
     # TODO decide how we get images, CIFAKE dataset etc. and/or model gen
-    image_dir = './data'
+    image_dir = '/Users/duys/proj/bitmind/bitmind-subnet/bitmind/data'
     image_files = ['pope_FAKE.jpg', 'tahoe_REAL.jpg']
 
     b64_images = []
@@ -59,23 +59,27 @@ async def forward(self):
 
     labels = torch.FloatTensor(labels)
 
+    for uid in miner_uids:
+        print("miner", uid, ":", self.metagraph.axons[uid])
+
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
         # Construct a query. TODO: do all miners get the same query?
-        synapse=ImageSynapse(images=b64_images),
+        synapse=ImageSynapse(images=b64_images, predictions=[]),
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
     )
+    print(responses)
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")
 
     # TODO why is self passed here in the bittensor template? overkill for moving response to device
     rewards = get_rewards(labels=labels, responses=responses)
-
+    print(rewards)
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
