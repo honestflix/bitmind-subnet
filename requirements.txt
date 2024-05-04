@@ -9,6 +9,5 @@ pillow
 pandas
 diffusers
 transformers
-os 
 matplotlib
 kaggle
