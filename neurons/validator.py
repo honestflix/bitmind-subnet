@@ -18,7 +18,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 from diffusers import DiffusionPipeline
+from datasets import load_dataset
 import bittensor as bt
+import numpy as np
 import time
 import torch
 
@@ -38,17 +40,29 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
+        self.gpu = 0  # TODO get from config
+
         bt.logging.info("load_state()")
         self.load_state()
 
-        self.diffuser = DiffusionPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
-            torch_dtype=torch.float16,
-            use_safetensors=True,
-            variant="fp16")
-        #self.diffuser.to("cuda")
+        print("Loading CIFAKE datset...")
+        cifake_dataset = load_dataset("yanbax/CIFAKE_autotrain_compatible")['train']
+        self.dataset = cifake_dataset
+        self.real_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 0])
+        self.gen_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 1])
+        print("Done")
 
-        # TODO(developer): Anything specific to your use case you can do here
+        if self.gpu != 0:
+            print("Loading image generation model...")
+            self.diffuser = DiffusionPipeline.from_pretrained(
+                "stabilityai/stable-diffusion-xl-base-1.0",
+                torch_dtype=torch.float16,
+                use_safetensors=True,
+                variant="fp16")
+            self.diffuser.to("cuda")
+            print("Done")
+        else:
+            self.diffuser = None
 
     async def forward(self):
         """
