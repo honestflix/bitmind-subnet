@@ -1,12 +1,46 @@
 # Bitmind Subnet
 
 ## WIP Status
+
 This subnet is being developed on staging according to the <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging Bittensor docs</a>.
 
+## Training a Model
 
+```
+conda create -n bitmind python=3.10 ipython
+conda activate bitmind
+export PIP_NO_CACHE_DIR=1
+pip install -r requirements.txt
+python3 -m pip install -e .
+```
 
+### Getting Data
+
+1. Create a Kaggle Account
+2. Get a Kaggle API Key - but kaggle.json in `$HOME/.kaggle/` directory
+3. Run:
+
+```python
+python base_miner/get_data.py
+```
+
+### Training a Model
+
+1. Modify `model.py` to improve performance of the base model
+2. Run:
+
+```python
+python base_miner/model.py
+```
+
+### Model Prediction / Inference
+
+```python
+python base_miner/predict.py
+```
 
 ## Start Miner
+
 Initial testing being done with base miner from:
 https://huggingface.co/spaces/Wvolf/CNN_Deepfake_Image_Detection/tree/main
 Clone this repo and move the model file into the root of this repository before running miner or validator
@@ -16,7 +50,9 @@ Clone this repo and move the model file into the root of this repository before 
 ```
 
 ## Start Validator
+
 In local testing, set the --neuron.vpermit_tao_limit to something far lower than its default so that all miners will pay attention to all validators (without having to mint a bunch of tao)
+
 ```
 python ./neurons/validator.py --netuid 1 --subtensor.chain_endpoint ws://127.0.0.1:9946 --wallet.name validator --wallet.hotkey validator_hot --logging.trace --logging.info --logging.debug --neuron.vpermit_tao_limit 500
 ```
