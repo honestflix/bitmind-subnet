@@ -1,21 +1,30 @@
 # Bitmind Subnet
 
 ## Local Testing Setup
-Follow Bittensor's <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging docs</a> to get a local version of Bittensor running
-   - After cloning the subtensor repository (step 3), make sure to checkout the main branch before running the subsequent build step (step 4)<br>
-    `git checkout main`
-   - If you're getting `eth-typing` warnings about ChainIds, run:<br>
-    `pip install --force-reinstall eth-utils==2.1.1`
+1. Clone and install this repository in a virtual environemnt:
+    ```
+    git clone git@github.com:BitMind-AI/bitmind-subnet.git
+    cd bitmind-subnet
+    conda create -n bitmind python=3.10 ipython
+    conda activate bitmind
+    export PIP_NO_CACHE_DIR=1
+    python3 -m pip install -r requirements.txt
+    python3 -m pip install -e .
+   ```
+2. Follow Bittensor's <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging docs</a> with the following modifications:
+  - **Modified step 3**
+     ```
+    git clone https://github.com/opentensor/subtensor.git
+    checkout main
+    ```
+  - **Skip step 6**
+
+*note*: If you are getting `eth-typing` warnings about ChainIds, run:<br>
+   `pip install --force-reinstall eth-utils==2.1.1`
 
 
-## Training a Model
-```
-conda create -n bitmind python=3.10 ipython
-conda activate bitmind
-export PIP_NO_CACHE_DIR=1
-pip install -r requirements.txt
-python3 -m pip install -e .
-```
+## Miner Training Quickstart
+Note - To test the miner, you can use the provided `mining_models/deepfake_detection_model.h5`.
 
 ### Getting Data
 

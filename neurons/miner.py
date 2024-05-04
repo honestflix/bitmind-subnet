@@ -42,7 +42,7 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        self.model = load_model(r'./deepfake_detection_model.h5')  # todo put model path in config
+        self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
 
     async def forward(
         self, synapse: ImageSynapse
