@@ -11,7 +11,7 @@ def download_dataset(dataset):
     dataset (str): Dataset path on Kaggle
     """
     kaggle.api.authenticate()
-    kaggle.api.dataset_download_files(dataset, path='.', unzip=True)
+    kaggle.api.dataset_download_files(dataset, path='base_miner/data', unzip=True)
 
 def label_dataset(): 
     fake_dir = 'base_miner/data/train/FAKE'
