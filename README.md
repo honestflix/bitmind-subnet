@@ -21,7 +21,7 @@
   - **Modified step 3**
      ```
     git clone https://github.com/opentensor/subtensor.git
-    checkout main
+    git checkout main
     ```
   - **Skip step 6**
 
