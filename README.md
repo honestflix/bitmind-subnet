@@ -4,6 +4,12 @@
 1. Clone and install this repository in a virtual environemnt:
     ```
     git clone git@github.com:BitMind-AI/bitmind-subnet.git
+    ```
+    or with https
+   ```
+   git clone https://github.com/BitMind-AI/bitmind-subnet.git
+   ```
+   ```
     cd bitmind-subnet
     conda create -n bitmind python=3.10 ipython
     conda activate bitmind
@@ -11,7 +17,7 @@
     python3 -m pip install -r requirements.txt
     python3 -m pip install -e .
    ```
-2. Follow Bittensor's <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging docs</a> with the following modifications:
+3. Follow Bittensor's <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging docs</a> with the following modifications:
   - **Modified step 3**
      ```
     git clone https://github.com/opentensor/subtensor.git
