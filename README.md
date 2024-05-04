@@ -58,11 +58,6 @@ python base_miner/predict.py
 ```
 
 ## Start Miner
-
-Initial testing being done with base miner from:
-https://huggingface.co/spaces/Wvolf/CNN_Deepfake_Image_Detection/tree/main
-Clone this repo and move the model file into the root of this repository before running miner or validator
-
 ```
 python ./neurons/miner.py --netuid 1 --subtensor.chain_endpoint ws://127.0.0.1:9946 --wallet.name miner --wallet.hotkey default --logging.debug
 ```
