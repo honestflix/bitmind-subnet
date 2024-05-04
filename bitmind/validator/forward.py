@@ -17,14 +17,16 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from io import BytesIO
 import bittensor as bt
+import numpy as np
 import torch
 import base64
 import os
 
 from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse
-from bitmind.validator.reward import get_rewards
+from bitmind.validator.reward import get_rewards, reward
 
 
 async def forward(self):
@@ -37,49 +39,68 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    # TODO(developer): Define how the validator selects a miner to query, how often, etc.
-    # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    # TODO decide how we get images, CIFAKE dataset etc. and/or model gen
-    image_dir = '/Users/duys/proj/bitmind/bitmind-subnet/bitmind/data'
-    image_files = ['pope_FAKE.jpg', 'tahoe_REAL.jpg']
+    k_gen = 5
+    k_real = 5
 
+    # get generated images, either from diffuser model if gpu is available, otherwise from cifake datset
+    # TODO: expand datset sources
+    if self.gpu > 0:
+        prompts = []  # TODO prompt generation
+        gen_images = []
+        for prompt in prompts:
+            gen_images.append(self.diffuser(prompt=prompt).images[0])
+    else:
+        print("Sampling generated images from dataset...")
+        gen_images_idx = np.random.choice(self.gen_images_idx, k_gen, replace=False)
+
+    print("Sampling real images from dataset...")
+    real_images_idx = np.random.choice(self.real_images_idx, k_gen, replace=False)
+    images_idx = np.concatenate([real_images_idx, gen_images_idx])
+    labels = np.array([0] * k_real + [1] * k_gen)
+
+    images_idx_labels = list(zip(images_idx, labels))
+    np.random.shuffle(images_idx_labels)
+
+    images_idx = np.array([s[0] for s in images_idx_labels])
+    labels = torch.FloatTensor([int(s[1]) for s in images_idx_labels])
+
+    print("Encoding...")
     b64_images = []
-    labels = []
-    for image_file in image_files:
-        label_str = image_file.split('_')[1].split('.')[0]
-        label = 1 if label_str == 'FAKE' else 0
-        labels.append(label)
+    for image_idx in images_idx:
+        image = self.dataset[int(image_idx)]['image']
+        buffered = BytesIO()
+        image.save(buffered, format="JPEG")
+        b64_images.append(base64.b64encode(buffered.getvalue()))
 
-        image_abspath = os.path.join(image_dir, image_file)
-        with open(image_abspath, "rb") as fin:
-            b64_image = base64.b64encode(fin.read()).decode('utf-8')
-            b64_images.append(b64_image)
 
-    labels = torch.FloatTensor(labels)
+    #for uid in miner_uids:
+    #    print("miner", uid, ":", self.metagraph.axons[uid])
 
-    for uid in miner_uids:
-        print("miner", uid, ":", self.metagraph.axons[uid])
-
+    print("Querying miners...")
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a query. TODO: do all miners get the same query?
+        # Construct a query.
         synapse=ImageSynapse(images=b64_images, predictions=[]),
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
     )
-    print(responses)
+
+    for image, label, pred in zip(images_idx, labels, responses[0]):
+        s = '[INCORRECT]' if np.round(pred) != label else '\t  '
+        print(s, image, label, pred)
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")
-
     # TODO why is self passed here in the bittensor template? overkill for moving response to device
-    rewards = get_rewards(labels=labels, responses=responses)
+    rewards, metrics = get_rewards(labels=labels, responses=responses)
     print(rewards)
+    print(metrics)
+
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
