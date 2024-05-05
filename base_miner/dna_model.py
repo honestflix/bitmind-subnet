@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import tensorflow as tf
 from torchvision import datasets, transforms
+import numpy as np
 
 class vgg_layer(nn.Module):
     def __init__(self, nin, nout):
@@ -84,50 +85,6 @@ class SupConNet(nn.Module):
         feat = F.normalize(self.head(feat), dim=1)
         return cls_out, feat
     
-img_height = 32
-img_width = 32
-batch_size = 500
-
-def partition_datset():
-    dataset_dir = "base_miner/data" # For Kaggle notebooks. If you run locally, point this line to the CIFAKE directory
-    print("Loading dataset from: " + dataset_dir)
-
-    # Load the training data
-    train_ds = tf.keras.utils.image_dataset_from_directory(
-    dataset_dir + "/train",
-    seed = 512,
-    image_size = (img_height, img_width),
-    batch_size = batch_size)
-
-    # Load the validation data
-    val_ds = tf.keras.utils.image_dataset_from_directory(
-    dataset_dir + "/test",
-    seed = 512,
-    image_size = (img_height, img_width),
-    batch_size = batch_size)
-
-    print("Training Classes:")
-    class_names = train_ds.class_names
-    print(class_names)
-
-    print("Testing Classes:")
-    class_names = val_ds.class_names
-    print(class_names)
-    return train_ds, val_ds
-    
-
-## Instantiate a Simple_CNN model
-netE = Simple_CNN(2)
-model = SupConNet(netE)
-print(model)
-
-# Creat a trainer for the above model using torch framework
-
-# Createa a data loader for the training and validation data
-def create_data_loader(train_ds, val_ds):
-    train_dl = DataLoader(train_ds, batch_size = batch_size, shuffle = True)
-    val_dl = DataLoader(val_ds, batch_size = batch_size, shuffle = False)
-    return train_dl, val_dl
 
 # Define the loss function
 def loss_fn(outputs, targets):
@@ -145,11 +102,8 @@ def train_model(model, model_name, train_loader, val_loader, epochs=10):
     for epoch in range(epochs):
         model.train()
         for i, (images, labels) in enumerate(train_loader):
-            # print(f'Epoch: {epoch}, Batch: {i} with shape: {images.shape} and labels: {labels}')
             optimizer.zero_grad()
             outputs = model(images)
-            # print(f'Outputs type: {type(outputs)}')
-            # If outputs is a tuple, unpack it
             if isinstance(outputs, tuple):
                 outputs = outputs[0]
             loss = loss_fn(outputs, labels)
@@ -162,14 +116,12 @@ def train_model(model, model_name, train_loader, val_loader, epochs=10):
             val_loss = []
             for i, (images, labels) in enumerate(val_loader):
                 outputs = model(images)
-                # print(f'Outputs type: {type(outputs)}')
-                # If outputs is a tuple, unpack it
                 if isinstance(outputs, tuple):
                     outputs = outputs[0]
                 loss = loss_fn(outputs, labels)
                 val_loss.append(loss.item())
             print(f'Epoch: {epoch}, Val Loss: {np.mean(val_loss)}')
-    torch.save(model.state_dict(), f'mining_models/{model_name}.h')
+    torch.save(model.state_dict(), f'mining_models/{model_name}.pt')
     return model
 
 def create_dl():
@@ -204,9 +156,8 @@ def create_dl():
 
 
 if(__name__=='__main__'):
-    # train_ds, val_ds = partition_datset()
     train_loader, test_loader = create_dl()    
     netE = Simple_CNN(2)
     model = SupConNet(netE)
     print(model)    
-    base_model_history = train_model(model, 'base_model', train_loader, test_loader, epochs=10)
+    base_model_history = train_model(model, 'torch_model', train_loader, test_loader, epochs=5)
