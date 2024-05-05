@@ -2,8 +2,8 @@ bittensor
 torch
 scikit-learn
 loguru
-tensorflow[and-cuda]==2.14.0
-# tensorflow
+# tensorflow[and-cuda]==2.14.0
+tensorflow
 opencv-python
 numpy
 pillow
