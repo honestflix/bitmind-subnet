@@ -14,7 +14,7 @@ img_height = 32
 img_width = 32
 batch_size = 500
 
-def partition_datset():
+def partition_dataset():
     dataset_dir = "base_miner/data" # For Kaggle notebooks. If you run locally, point this line to the CIFAKE directory
     print("Loading dataset from: " + dataset_dir)
 
@@ -53,7 +53,7 @@ def plot_metrics(history, metric):
 
 
 
-train_ds, val_ds = partition_datset()    
+train_ds, val_ds = partition_dataset()    
 # Constant values that will be shared by all the models
 val_true_classes = np.concatenate([y for x, y in val_ds], axis = 0)  # Get true labels
 class_names = ['FAKE', 'REAL']
@@ -128,6 +128,7 @@ def build_vgg():
 
     # Build the Transfer Learning model so we can see a summary
     VGG_model.summary()
+    return VGG_model
     
 def build_efficient_net():
     # Building the Transfer Learning model using EfficientNetV2B0
@@ -165,27 +166,33 @@ def build_efficient_net():
     return EfficientNet_model
 
 def train_model(model, model_name, train_ds, val_ds):
-    print("Starting training with Transfer Learning using ResNet50...")
+    print(f'Starting training for {model_name}...')
     model_history = model.fit(
         train_ds,
         validation_data = val_ds,
-        epochs = 200,
+        epochs = 2,
         verbose = 1,
         callbacks = [early_stopping]
     )
-    print("Transfer Learning training finished.")
+    print("Model Training finished.")
     
-    model.save(f'{model_name}.h5')
+    model.save(f'mining_models/{model_name}.h5')
     
     return model_history
 
 
 if(__name__=='__main__'):
-    train_ds, val_ds = partition_datset()    
+    train_ds, val_ds = partition_dataset()    
     base_model = build_resnet()
     base_model_history = train_model(base_model, 'base_model', train_ds, val_ds)
-    plot_metrics(base_model_history, 'loss')
-    plot_metrics(base_model_history, 'accuracy')
-    plot_metrics(base_model_history, 'precision')
-    plot_metrics(base_model_history, 'recall')
+    
+    # vgg_model = build_vgg()
+    # vgg_model_history = train_model(vgg_model, 'vgg_model', train_ds, val_ds)
+    
+    # efficient_net_model = build_efficient_net()
+    # efficient_net_model_history = train_model(efficient_net_model, 'efficient_net_model', train_ds, val_ds)
+    # plot_metrics(base_model_history, 'loss')
+    # plot_metrics(base_model_history, 'accuracy')
+    # plot_metrics(base_model_history, 'precision')
+    # plot_metrics(base_model_history, 'recall')
     
