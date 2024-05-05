@@ -11,3 +11,4 @@ diffusers
 transformers
 matplotlib
 kaggle
+torchvision
