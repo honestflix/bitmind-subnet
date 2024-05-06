@@ -149,6 +149,7 @@ async def forward(self):
 
     b64_images = [s[0] for s in images_labels_names]
     labels = torch.FloatTensor([int(s[1]) for s in images_labels_names])
+    labels.to("cuda")
     names = [s[2] for s in images_labels_names]
 
 
