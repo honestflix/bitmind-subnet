@@ -12,4 +12,6 @@ diffusers
 transformers
 matplotlib
 kaggle
-
+torchvision
+torchaudio
+cudatoolkit

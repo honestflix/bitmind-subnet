@@ -45,12 +45,17 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
 
+        """
         print("Loading CIFAKE datset...")
         cifake_dataset = load_dataset("yanbax/CIFAKE_autotrain_compatible")['train']
         self.dataset = cifake_dataset
         self.real_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 0])
         self.gen_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 1])
         print("Done")
+        """
+
+        print("Loading open-images dataset")
+        self.real_dataset = load_dataset("dalle-mini/open-images", split='validation')
 
         if self.gpu != 0:
             print("Loading image generation model...")
@@ -62,7 +67,8 @@ class Validator(BaseValidatorNeuron):
             self.diffuser.to("cuda")
             print("Done")
         else:
-            self.diffuser = None
+            print("Loading local generated dataset [DEV MODE]")
+            self.gen_dataset = load_dataset('imagefolder', data_dir='./bitmind/data/generated', split='train')
 
     async def forward(self):
         """
