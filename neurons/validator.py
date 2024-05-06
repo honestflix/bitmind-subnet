@@ -17,6 +17,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from transformers import pipeline
 from diffusers import DiffusionPipeline
 from datasets import load_dataset
 import bittensor as bt
@@ -45,19 +46,19 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
 
-        """
-        print("Loading CIFAKE datset...")
-        cifake_dataset = load_dataset("yanbax/CIFAKE_autotrain_compatible")['train']
-        self.dataset = cifake_dataset
-        self.real_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 0])
-        self.gen_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 1])
-        print("Done")
-        """
-
         print("Loading open-images dataset")
         self.real_dataset = load_dataset("dalle-mini/open-images", split='validation')
 
         if self.gpu != 0:
+            print("Loading prompt generation model...")
+            self.prompt_generator = pipeline(
+                'text-generation',
+                model='Gustavosta/MagicPrompt-Stable-Diffusion',
+                tokenizer='gpt2')
+            with open('./bitmind/data/ideas.txt', 'r') as fin:
+                self.ideas_text = fin.readlines()
+            print("Done")
+
             print("Loading image generation model...")
             self.diffuser = DiffusionPipeline.from_pretrained(
                 "stabilityai/stable-diffusion-xl-base-1.0",

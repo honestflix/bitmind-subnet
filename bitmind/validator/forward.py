@@ -17,6 +17,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from transformers import set_seed
 from PIL import Image
 from io import BytesIO
 import bittensor as bt
@@ -24,6 +25,8 @@ import numpy as np
 import torch
 import base64
 import requests
+import random
+import re
 
 from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse
@@ -62,6 +65,29 @@ def get_b64_image_from_dataset(dataset, index):
     return base64.b64encode(image_bytes.getvalue())
 
 
+def generate_prompt(generator, starting_text, ideas):
+    seed = random.randint(100, 1000000)
+    set_seed(seed)
+
+    if starting_text == "":
+        starting_text: str = ideas[random.randrange(0, len(ideas))].replace("\n", "").lower().capitalize()
+        starting_text: str = re.sub(r"[,:\-–.!;?_]", '', starting_text)
+
+    response = generator(starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
+    response_list = []
+    for x in response:
+        resp = x['generated_text'].strip()
+        if resp != starting_text and len(resp) > (len(starting_text) + 4) and resp.endswith((":", "-", "—")) is False:
+            response_list.append(resp+'\n')
+
+    response_end = "\n".join(response_list)
+    response_end = re.sub('[^ ]+\.[^ ]+','', response_end)
+    response_end = response_end.replace("<", "").replace(">", "")
+
+    if response_end != "":
+        return response_end
+
+
 async def forward(self):
     """
     The forward function is called by the validator every time step.
@@ -79,9 +105,12 @@ async def forward(self):
 
     # get generated images, either from diffuser model if gpu is available, otherwise from local dataset
     if self.gpu > 0:
-        prompts = []  # TODO prompt generation
+        print("Generating images...")
+        prompts = [generate_prompt(
+            self.prompt_generator, "A realistic image", self.ideas_text)]
         gen_images = []
         for prompt in prompts:
+            print("Prompt:", prompt)
             gen_images.append(self.diffuser(prompt=prompt).images[0])
     else:
         print("Sampling generated images from dataset...")
