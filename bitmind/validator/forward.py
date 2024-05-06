@@ -149,7 +149,6 @@ async def forward(self):
 
     b64_images = [s[0] for s in images_labels_names]
     labels = torch.FloatTensor([int(s[1]) for s in images_labels_names])
-    labels.to("cuda")
     names = [s[2] for s in images_labels_names]
 
 
@@ -181,4 +180,5 @@ async def forward(self):
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
+    rewards.to('cuda')
     self.update_scores(rewards, miner_uids)
