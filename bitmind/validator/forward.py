@@ -22,6 +22,7 @@ from PIL import Image
 from io import BytesIO
 import bittensor as bt
 import numpy as np
+import time
 import torch
 import base64
 import requests
@@ -73,7 +74,9 @@ def generate_prompt(generator, starting_text, ideas):
         starting_text: str = ideas[random.randrange(0, len(ideas))].replace("\n", "").lower().capitalize()
         starting_text: str = re.sub(r"[,:\-–.!;?_]", '', starting_text)
 
-    response = generator(starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
+    #response = generator(starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
+    response = generator(starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1)
+
     response_list = []
     for x in response:
         resp = x['generated_text'].strip()
@@ -105,13 +108,26 @@ async def forward(self):
 
     # get generated images, either from diffuser model if gpu is available, otherwise from local dataset
     if self.gpu > 0:
+        print("Generating prompts...")
+        prompts = [
+            generate_prompt(self.prompt_generator, "A realistic image", self.ideas_text)
+            for _ in range(k_gen)
+        ]
+
         print("Generating images...")
-        prompts = [generate_prompt(
-            self.prompt_generator, "A realistic image", self.ideas_text)]
         gen_images = []
-        for prompt in prompts:
+        gen_image_names = list(range(0, len(prompts)))
+        for i, prompt in enumerate(prompts):
             print("Prompt:", prompt)
-            gen_images.append(self.diffuser(prompt=prompt).images[0])
+            gen_image = self.diffuser(prompt=prompt).images[0]
+            gen_image.save(f"{time.time()}_{i}.jpg")
+            gen_images.append(gen_image)
+
+        gen_b64_images = []
+        for gen_image in gen_images:
+            image_bytes = BytesIO()
+            gen_image.save(image_bytes, format="JPEG")
+            gen_b64_images.append(base64.b64encode(image_bytes.getvalue()))
     else:
         print("Sampling generated images from dataset...")
         gen_images_idx = np.random.choice(
@@ -151,7 +167,6 @@ async def forward(self):
     labels = torch.FloatTensor([int(s[1]) for s in images_labels_names])
     names = [s[2] for s in images_labels_names]
 
-
     for uid in miner_uids:
         print("miner", uid, ":", self.metagraph.axons[uid])
 
@@ -180,5 +195,6 @@ async def forward(self):
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
-    rewards.to('cuda')
+    rewards = rewards.to('cuda')
+    miner_uids = miner_uids.to('cuda')
     self.update_scores(rewards, miner_uids)
