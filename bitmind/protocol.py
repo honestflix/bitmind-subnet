@@ -18,8 +18,12 @@
 # DEALINGS IN THE SOFTWARE.
 
 from typing import List
+from pydantic import root_validator, validator
+from io import BytesIO
+from PIL import Image
 import bittensor as bt
 import pydantic
+import base64
 
 
 # ---- miner ----
@@ -61,6 +65,31 @@ class ImageSynapse(bt.Synapse):
         title="Predictions",
         description="A list of deep fake probabilities"
     )
+
+    @validator('images')
+    def images_setter(cls, images):
+        b64_encoded_images = []
+        for image in images:
+            if isinstance(image, BytesIO):
+                encoded = base64.b64encode(image.getvalue())
+            elif isinstance(image, Image.Image):
+                image_bytes = BytesIO()
+                image.save(image_bytes, format="JPEG")
+                encoded = base64.b64encode(image_bytes.getvalue())
+            else:
+                raise NotImplementedError
+
+            b64_encoded_images.append(encoded)
+
+    @root_validator
+    def images_getter(cls, values):
+        if 'images' in values:
+            PIL_images = []
+            for b64_image in values['images']:
+                image_bytes = base64.b64decode(b64_image)
+                PIL_images.append(Image.open(BytesIO(image_bytes)))
+            values['images'] = PIL_images
+        return values
 
     def deserialize(self) -> List[float]:
         """
