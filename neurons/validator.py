@@ -41,7 +41,7 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        self.gpu = 0  # TODO get from config
+        self.gpu = 1  # TODO get from config
 
         bt.logging.info("load_state()")
         self.load_state()
@@ -54,7 +54,8 @@ class Validator(BaseValidatorNeuron):
             self.prompt_generator = pipeline(
                 'text-generation',
                 model='Gustavosta/MagicPrompt-Stable-Diffusion',
-                tokenizer='gpt2')
+                tokenizer='gpt2',
+                device=-1)
             with open('./bitmind/data/ideas.txt', 'r') as fin:
                 self.ideas_text = fin.readlines()
             print("Done")
