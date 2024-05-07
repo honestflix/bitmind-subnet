@@ -12,13 +12,11 @@ import re
 class RandomImageGenerator:
 
     def __init__(
-            self,
-            prompt_generators,
-            image_generators,
+            self
     ):
 
-        self.prompt_generators = prompt_generators
-        self.image_generators = image_generators
+        #self.prompt_generators = prompt_generators
+        #self.image_generators = image_generators
 
         bt.logging.info("Loading prompt generation models...")
         self.prompt_generator = pipeline(
