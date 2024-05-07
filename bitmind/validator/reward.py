@@ -39,12 +39,13 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
     Returns:
     - float: The reward value for the miner.
     """
+
     preds = np.round(y_pred)
     # accuracy = accuracy_score(y_true, preds)
     cm = confusion_matrix(y_true, preds, labels=[1, 0])
     tn, fp, fn, tp = cm.ravel()
-    prec = precision_score(y_true, y_pred)
-    rec = recall_score(y_true, y_pred)
+    prec = precision_score(y_true, preds)
+    rec = recall_score(y_true, preds)
     f1 = f1_score(y_true, preds)
     ap_score = average_precision_score(y_true, y_pred)
 
