@@ -20,6 +20,7 @@
 from tensorflow.keras.models import load_model
 from PIL import Image
 import bittensor as bt
+import tensorflow as tf
 import numpy as np
 import base64
 import time
@@ -42,7 +43,8 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
+        with tf.device('/CPU:0'):
+            self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
 
     async def forward(
         self, synapse: ImageSynapse
@@ -69,12 +71,13 @@ class Miner(BaseMinerNeuron):
             x /= 255.0
             x = np.expand_dims(x, axis=0)
             try:
-                probs = self.model.predict(x)[0]
+                with tf.device('/CPU:0'):
+                    probs = self.model.predict(x)[0]
+                synapse.predictions.append(probs[0])
             except Exception as e:
                 print(f"ERROR: image {i} failed")
                 print(e)
 
-            synapse.predictions.append(probs[0])
 
         print("PREDICTIONS:", synapse.predictions)
 
