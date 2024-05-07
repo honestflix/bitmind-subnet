@@ -17,16 +17,17 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from transformers import pipeline
-from diffusers import DiffusionPipeline
 from datasets import load_dataset
 import bittensor as bt
 import numpy as np
 import time
 import torch
 
+
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
+from bitmind.random_image_generator import RandomImageGenerator
+from bitmind.real_image_dataset import RealImageDataset
 
 
 class Validator(BaseValidatorNeuron):
@@ -47,30 +48,8 @@ class Validator(BaseValidatorNeuron):
         self.load_state()
 
         print("Loading open-images dataset")
-        self.real_dataset = load_dataset("dalle-mini/open-images", split='validation')
-
-        if self.gpu != 0:
-            print("Loading prompt generation model...")
-            self.prompt_generator = pipeline(
-                'text-generation',
-                model='Gustavosta/MagicPrompt-Stable-Diffusion',
-                tokenizer='gpt2',
-                device=-1)
-            with open('./bitmind/data/ideas.txt', 'r') as fin:
-                self.ideas_text = fin.readlines()
-            print("Done")
-
-            print("Loading image generation model...")
-            self.diffuser = DiffusionPipeline.from_pretrained(
-                "stabilityai/stable-diffusion-xl-base-1.0",
-                torch_dtype=torch.float16,
-                use_safetensors=True,
-                variant="fp16")
-            self.diffuser.to("cuda")
-            print("Done")
-        else:
-            print("Loading local generated dataset [DEV MODE]")
-            self.gen_dataset = load_dataset('imagefolder', data_dir='./bitmind/data/generated', split='train')
+        self.real_dataset = RealImageDataset()
+        self.random_image_generator = RandomImageGenerator()
 
     async def forward(self):
         """
