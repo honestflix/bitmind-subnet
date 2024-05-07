@@ -63,9 +63,9 @@ class Miner(BaseMinerNeuron):
         """
         print("RECEIVED", len(synapse.images), 'IMAGES')
 
-        for i, image in enumerate(synapse.images):
-            #image_bytes = base64.b64decode(b64_image)
-            #image = Image.open(io.BytesIO(image_bytes))
+        for i, b64_image in enumerate(synapse.images):
+            image_bytes = base64.b64decode(b64_image)
+            image = Image.open(io.BytesIO(image_bytes))
             x = np.array(image, dtype=np.float64)
             x = cv2.resize(x, (256, 256), interpolation=cv2.INTER_AREA)
             x /= 255.0

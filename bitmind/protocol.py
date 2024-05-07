@@ -26,6 +26,29 @@ import pydantic
 import base64
 
 
+def prepare_image_synapse(images, predictions):
+
+    b64_encoded_images = []
+    for image in images:
+        if isinstance(image, BytesIO):
+            encoded = base64.b64encode(image.getvalue())
+        elif isinstance(image, Image.Image):
+            image_bytes = BytesIO()
+            image.save(image_bytes, format="JPEG")
+            encoded = base64.b64encode(image_bytes.getvalue())
+        elif image is None:
+            print("Warning: None image")
+            continue
+        else:
+            print(type(image))
+            raise NotImplementedError
+        
+        b64_encoded_images.append(encoded)
+
+    return ImageSynapse(images=b64_encoded_images, predictions=predictions)
+
+
+
 # ---- miner ----
 # Example usage:
 #   def miner_forward( synapse: ImageSynapse ) -> ImageSynapse:
@@ -57,7 +80,7 @@ class ImageSynapse(bt.Synapse):
     images: List[str] = pydantic.Field(
         title="Images",
         description="A list of base64 encoded images to check",
-        allow_mutation=False
+        allow_mutation=True
     )
 
     # Optional request output, filled by receiving axon.
@@ -65,31 +88,6 @@ class ImageSynapse(bt.Synapse):
         title="Predictions",
         description="A list of deep fake probabilities"
     )
-
-    @validator('images')
-    def images_setter(cls, images):
-        b64_encoded_images = []
-        for image in images:
-            if isinstance(image, BytesIO):
-                encoded = base64.b64encode(image.getvalue())
-            elif isinstance(image, Image.Image):
-                image_bytes = BytesIO()
-                image.save(image_bytes, format="JPEG")
-                encoded = base64.b64encode(image_bytes.getvalue())
-            else:
-                raise NotImplementedError
-
-            b64_encoded_images.append(encoded)
-
-    @root_validator
-    def images_getter(cls, values):
-        if 'images' in values:
-            PIL_images = []
-            for b64_image in values['images']:
-                image_bytes = base64.b64decode(b64_image)
-                PIL_images.append(Image.open(BytesIO(image_bytes)))
-            values['images'] = PIL_images
-        return values
 
     def deserialize(self) -> List[float]:
         """
