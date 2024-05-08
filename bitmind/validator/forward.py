@@ -60,8 +60,7 @@ async def forward(self):
     else:
         bt.logging.warning('UNABLE TO GENERATE IMAGES')
         images = real_images
-    print(len(real_images), len(gen_images), len(images))
-    print(labels)
+
     images_labels = list(zip(images, labels))
     np.random.shuffle(images_labels)
 
@@ -72,7 +71,7 @@ async def forward(self):
     #for uid in miner_uids:
     #    print("miner", uid, ":", self.metagraph.axons[uid])
 
-    print(f"Querying miners with {len(synapse.images)} images...")
+    print(f"Querying miners with {len(images)} images...")
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
