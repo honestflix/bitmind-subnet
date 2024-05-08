@@ -41,6 +41,7 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
     """
 
     preds = np.round(y_pred)
+    #print(preds, '\n', y_true)
     # accuracy = accuracy_score(y_true, preds)
     cm = confusion_matrix(y_true, preds, labels=[1, 0])
     tn, fp, fn, tp = cm.ravel()
