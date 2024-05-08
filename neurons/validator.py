@@ -17,15 +17,17 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from diffusers import DiffusionPipeline
 from datasets import load_dataset
 import bittensor as bt
 import numpy as np
 import time
 import torch
+from collections import defaultdict
 
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
+from bitmind.random_image_generator import RandomImageGenerator
+from bitmind.real_image_dataset import RealImageDataset
 
 
 class Validator(BaseValidatorNeuron):
@@ -40,35 +42,17 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        self.gpu = 0  # TODO get from config
+        self.gpu = 1  # TODO get from config
 
         bt.logging.info("load_state()")
         self.load_state()
 
-        """
-        print("Loading CIFAKE datset...")
-        cifake_dataset = load_dataset("yanbax/CIFAKE_autotrain_compatible")['train']
-        self.dataset = cifake_dataset
-        self.real_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 0])
-        self.gen_images_idx = np.array([i for i, label in enumerate(cifake_dataset['label']) if label == 1])
-        print("Done")
-        """
-
         print("Loading open-images dataset")
-        self.real_dataset = load_dataset("dalle-mini/open-images", split='validation')
+        self.real_dataset = RealImageDataset()
+        self.random_image_generator = RandomImageGenerator()
 
-        if self.gpu != 0:
-            print("Loading image generation model...")
-            self.diffuser = DiffusionPipeline.from_pretrained(
-                "stabilityai/stable-diffusion-xl-base-1.0",
-                torch_dtype=torch.float16,
-                use_safetensors=True,
-                variant="fp16")
-            self.diffuser.to("cuda")
-            print("Done")
-        else:
-            print("Loading local generated dataset [DEV MODE]")
-            self.gen_dataset = load_dataset('imagefolder', data_dir='./bitmind/data/generated', split='train')
+        self.results = defaultdict(list)
+        self.challenge = 0
 
     async def forward(self):
         """
@@ -85,6 +69,8 @@ class Validator(BaseValidatorNeuron):
 
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
+    import warnings
+    warnings.filterwarnings("ignore")
     with Validator() as validator:
         while True:
             bt.logging.info("Validator running...", time.time())

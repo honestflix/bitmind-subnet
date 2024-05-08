@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
 # developer: dubm
@@ -20,6 +21,7 @@
 from tensorflow.keras.models import load_model
 from PIL import Image
 import bittensor as bt
+import tensorflow as tf
 import numpy as np
 import base64
 import time
@@ -29,7 +31,7 @@ import io
 
 from template.base.miner import BaseMinerNeuron
 from bitmind.protocol import ImageSynapse
-
+from bitmind.miner.predict import predict
 
 class Miner(BaseMinerNeuron):
     """
@@ -42,7 +44,8 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
+        with tf.device('/CPU:0'):
+            self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
 
     async def forward(
         self, synapse: ImageSynapse
@@ -64,20 +67,14 @@ class Miner(BaseMinerNeuron):
         for i, b64_image in enumerate(synapse.images):
             image_bytes = base64.b64decode(b64_image)
             image = Image.open(io.BytesIO(image_bytes))
-            x = np.array(image, dtype=np.float64)
-            x = cv2.resize(x, (256, 256), interpolation=cv2.INTER_AREA)
-            x /= 255.0
-            x = np.expand_dims(x, axis=0)
             try:
-                probs = self.model.predict(x)[0]
+                probs = predict(self.model, image, device='/CPU:0')
+                synapse.predictions.append(probs[0])
             except Exception as e:
                 print(f"ERROR: image {i} failed")
                 print(e)
 
-            synapse.predictions.append(probs[0])
-
         print("PREDICTIONS:", synapse.predictions)
-
         return synapse
 
     async def blacklist(
@@ -177,6 +174,8 @@ class Miner(BaseMinerNeuron):
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
+    import warnings
+    warnings.filterwarnings("ignore")
     with Miner() as miner:
         while True:
             bt.logging.info("Miner running...", time.time())

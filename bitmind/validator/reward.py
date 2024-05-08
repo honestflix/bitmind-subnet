@@ -22,9 +22,13 @@ import torch
 from typing import List, Tuple
 import bittensor as bt
 import numpy as np
-from sklearn.metrics import f1_score, confusion_matrix, average_precision_score
-
-from bitmind.protocol import ImageSynapse
+from sklearn.metrics import (
+    f1_score,
+    precision_score,
+    recall_score,
+    confusion_matrix,
+    average_precision_score
+)
 
 
 def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
@@ -35,21 +39,27 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
     Returns:
     - float: The reward value for the miner.
     """
+
     preds = np.round(y_pred)
+    #print(preds, '\n', y_true)
     # accuracy = accuracy_score(y_true, preds)
     cm = confusion_matrix(y_true, preds, labels=[1, 0])
     tn, fp, fn, tp = cm.ravel()
+    prec = precision_score(y_true, preds)
+    rec = recall_score(y_true, preds)
     f1 = f1_score(y_true, preds)
     ap_score = average_precision_score(y_true, y_pred)
 
     metrics = {
         'fp_score': 1 - fp / len(y_pred),
+        'precision': prec,
+        'recall': rec,
         'f1_score': f1,
         'ap_score': ap_score
     }
     # TODO: should we use some linear combination of these metrics
-    #reward_val = sum([v for v in metrics.values()]) / len(metrics)
-    return f1, metrics
+    reward_val = sum([v for v in metrics.values()]) / len(metrics)
+    return reward_val, metrics
 
 
 def count_penalty(y_pred: np.array) -> float:

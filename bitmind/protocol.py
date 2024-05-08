@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
 # developer: dubm
@@ -18,8 +19,31 @@
 # DEALINGS IN THE SOFTWARE.
 
 from typing import List
+from pydantic import root_validator, validator
+from io import BytesIO
+from PIL import Image
 import bittensor as bt
 import pydantic
+import base64
+
+
+def prepare_image_synapse(images, predictions):
+
+    b64_encoded_images = []
+    for image in images:
+        if image is None:
+            print("Warning: None image")
+            continue
+
+        image = image.resize((256, 256))
+        
+        image_bytes = BytesIO()
+        image.save(image_bytes, format="JPEG")
+        encoded = base64.b64encode(image_bytes.getvalue())
+        b64_encoded_images.append(encoded)
+
+    return ImageSynapse(images=b64_encoded_images, predictions=predictions)
+
 
 
 # ---- miner ----
@@ -53,7 +77,7 @@ class ImageSynapse(bt.Synapse):
     images: List[str] = pydantic.Field(
         title="Images",
         description="A list of base64 encoded images to check",
-        allow_mutation=False
+        allow_mutation=True
     )
 
     # Optional request output, filled by receiving axon.
