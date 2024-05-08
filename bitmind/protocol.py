@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
 # developer: dubm
@@ -30,19 +31,15 @@ def prepare_image_synapse(images, predictions):
 
     b64_encoded_images = []
     for image in images:
-        if isinstance(image, BytesIO):
-            encoded = base64.b64encode(image.getvalue())
-        elif isinstance(image, Image.Image):
-            image_bytes = BytesIO()
-            image.save(image_bytes, format="JPEG")
-            encoded = base64.b64encode(image_bytes.getvalue())
-        elif image is None:
+        if image is None:
             print("Warning: None image")
             continue
-        else:
-            print(type(image))
-            raise NotImplementedError
+
+        image = image.resize((256, 256))
         
+        image_bytes = BytesIO()
+        image.save(image_bytes, format="JPEG")
+        encoded = base64.b64encode(image_bytes.getvalue())
         b64_encoded_images.append(encoded)
 
     return ImageSynapse(images=b64_encoded_images, predictions=predictions)
