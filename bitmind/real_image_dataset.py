@@ -21,6 +21,14 @@ def download_image(url):
         return None
 
 
+def load_huggingface_dataset(name):
+    if 'imagedir' in name:
+        _, directory = name.split(':')
+        return load_dataset(path='imagedir', data_dir=directory)
+    else:
+        return load_dataset(name, split='validation')
+
+
 class RealImageDataset:
 
     def __init__(
@@ -29,10 +37,14 @@ class RealImageDataset:
     ):
         self.huggingface_datasets = huggingface_datasets
         self.sources = {
-            name: load_dataset(name, split='validation')
+            name: load_huggingface_dataset(name)
             for name in huggingface_datasets
         }
         self.sampled_images_idx = defaultdict(list)
+
+    def __getitem__(self, index):
+        # TODO get from multiple source options
+        return np.random.choice(self.sources[self.huggingface_datasets[0]])
 
     def _get_image(self, data_source, index):
         """
