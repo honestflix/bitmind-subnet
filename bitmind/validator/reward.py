@@ -57,8 +57,8 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
         'ap_score': ap_score
     }
     # TODO: should we use some linear combination of these metrics
-    #reward_val = sum([v for v in metrics.values()]) / len(metrics)
-    return f1, metrics
+    reward_val = sum([v for v in metrics.values()]) / len(metrics)
+    return reward_val, metrics
 
 
 def count_penalty(y_pred: np.array) -> float:
