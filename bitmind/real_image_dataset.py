@@ -1,4 +1,5 @@
 from typing import List
+from collections import defaultdict
 from datasets import load_dataset
 from PIL import Image
 from io import BytesIO
@@ -10,16 +11,13 @@ import base64
 
 def download_image(url):
     print(f'downloading {url}')
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(type(response.content))
-            return BytesIO(response.content)
-        else:
-            print(f"Failed to download image: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"Error downloading image: {e}")
+    response = requests.get(url)
+    if response.status_code == 200:
+        image_data =  BytesIO(response.content)
+        return Image.open(image_data)
+
+    else:
+        print(f"Failed to download image: {response.status_code}")
         return None
 
 
@@ -34,6 +32,7 @@ class RealImageDataset:
             name: load_dataset(name, split='validation')
             for name in huggingface_datasets
         }
+        self.sampled_images_idx = defaultdict(list)
 
     def _get_image(self, data_source, index):
         """
@@ -60,27 +59,28 @@ class RealImageDataset:
             'id': image_id,
         }
 
-    def sample_images(self, k=1, sampled_images=[], sampled_images_idx={}):
+    def sample(self, k=1):
         """
         """
-        if k == 0:
-            return sampled_images
-
         data_source = np.random.choice(self.huggingface_datasets, 1)[0]
-        bt.logging.info(f"Sampling {k} real images from {data_source}...")
+        print(f"Sampling {k} real images from {data_source}...")
 
         dataset = self.sources[data_source]
-        while True:
-            image_idx = np.random.randint(0, len(dataset))
-            if image_idx not in sampled_images_idx[data_source]:
-                break
+        sampled_images = []
+        while k > 0:
+            attempts = len(dataset) // 2
+            for _ in range(attempts):
+                image_idx = np.random.randint(0, len(dataset))
+                if data_source not in self.sampled_images_idx or image_idx not in self.sampled_images_idx[data_source]:
+                    break
+            try:
+                image = self._get_image(data_source, image_idx)
+                if image['image'] is not None:
+                    sampled_images.append(image)
+                    self.sampled_images_idx[data_source].append(image_idx)
+                    k -= 1
+            except Exception as e:
+                print(e)
+                continue
 
-        try:
-            image = self._get_image(data_source, image_idx)
-            sampled_images.append(image)
-            sampled_images_idx[data_source].append(image_idx)
-            k -= 1
-        except Exception as e:
-            print(e)
-
-        return self.sample_images(k, sampled_images, sampled_images_idx)
+        return sampled_images
