@@ -88,7 +88,7 @@ async def forward(self):
 
     for image_sample, label, pred in zip(image_samples, labels, miner):
         s = '[INCORRECT]' if np.round(pred) != label else '\t  '
-        #print(s, image_sample['id'], label, pred)
+        print(s, image_sample['id'], label, pred)
         self.results['challenge'].append(self.challenge)
         self.results['image'].append(image_sample['id'])
         self.results['label'].append(label)

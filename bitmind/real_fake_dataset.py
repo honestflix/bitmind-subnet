@@ -16,15 +16,18 @@ class RealFakeDataset:
         self.image_generator = image_generator
         self.transforms = transforms
 
-    def __getitem__(self, item):
+    def __getitem__(self, index):
 
-        source = self.real_image_dataset
-        label = 0.
         if np.random.rand() > .5:
             source = self.fake_image_dataset
+            image = source[index]['image']
             label = 1.
+        else:
+            source = self.real_image_dataset
+            image = source.sample(1)[0]['image']
+            label = 0.
 
-        image = source.sample(1)
+        #image = source[index]['image']
         if self.transforms is not None:
             image = self.transforms(image)
 
