@@ -39,13 +39,13 @@ class RandomImageGenerator:
         """
 
         """
-        bt.logging.info("Generating prompts...")
+        print("Generating prompts...")
         prompts = [
             self.generate_prompt("A realistic image")
             for _ in range(k)
         ]
 
-        bt.logging.info("Generating images...")
+        print("Generating images...")
         gen_data = []
         for prompt in prompts:
             image_name = f"{time.time()}.jpg"
@@ -66,7 +66,7 @@ class RandomImageGenerator:
         #response = generator(
         # starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
         response = self.prompt_generator(
-            starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1)
+            starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1, truncation=True)
 
         response_list = []
         for x in response:
