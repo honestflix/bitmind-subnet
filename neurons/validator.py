@@ -22,7 +22,7 @@ import bittensor as bt
 import numpy as np
 import time
 import torch
-
+from collections import defaultdict
 
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
@@ -51,6 +51,9 @@ class Validator(BaseValidatorNeuron):
         self.real_dataset = RealImageDataset()
         self.random_image_generator = RandomImageGenerator()
 
+        self.results = defaultdict(list)
+        self.challenge = 0
+
     async def forward(self):
         """
         Validator forward pass. Consists of:
@@ -66,6 +69,8 @@ class Validator(BaseValidatorNeuron):
 
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
+    import warnings
+    warnings.filterwarnings("ignore")
     with Validator() as validator:
         while True:
             bt.logging.info("Validator running...", time.time())
