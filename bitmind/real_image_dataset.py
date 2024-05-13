@@ -13,7 +13,7 @@ def download_image(url):
     #print(f'downloading {url}')
     response = requests.get(url)
     if response.status_code == 200:
-        image_data =  BytesIO(response.content)
+        image_data = BytesIO(response.content)
         return Image.open(image_data)
 
     else:
@@ -33,28 +33,28 @@ class RealImageDataset:
 
     def __init__(
             self,
-            huggingface_datasets: List[str]=['dalle-mini/open-images']
+            huggingface_dataset_names: List[str]=['dalle-mini/open-images']
     ):
-        self.huggingface_datasets = huggingface_datasets
-        self.sources = {
+        self.huggingface_dataset_names = huggingface_dataset_names
+        self.data_sources = {
             name: load_huggingface_dataset(name)
-            for name in huggingface_datasets
+            for name in huggingface_dataset_names
         }
         self.sampled_images_idx = defaultdict(list)
 
     def __getitem__(self, index):
         # TODO get from multiple source options
-        source = np.random.choice(self.huggingface_datasets, 1)[0]
+        source = np.random.choice(self.huggingface_dataset_names, 1)[0]
         return self._get_image(source, index)
     def __len__(self):
         # todo factor in multidataset
-        return len(self.sources[self.huggingface_datasets[0]])
+        return len(self.data_sources[self.huggingface_dataset_names[0]])
 
     def _get_image(self, data_source, index):
         """
 
         """
-        sample = self.sources[data_source][int(index)]
+        sample = self.data_sources[data_source][int(index)]
         if 'url' in sample:
             image = download_image(sample['url'])
             image_id = sample['url']
@@ -70,7 +70,7 @@ class RealImageDataset:
         else:
             raise NotImplementedError
 
-        # check for alpha channel if download didnt 404
+        # check for/remove alpha channel if download didnt 404
         if image is not None and 'A' in image.mode:
             image = image.convert('RGB')
 
@@ -82,10 +82,10 @@ class RealImageDataset:
     def sample(self, k=1):
         """
         """
-        data_source = np.random.choice(self.huggingface_datasets, 1)[0]
+        data_source = np.random.choice(self.huggingface_dataset_names, 1)[0]
         #print(f"Sampling {k} real images from {data_source}...")
 
-        dataset = self.sources[data_source]
+        dataset = self.data_sources[data_source]
         sampled_images = []
         while k > 0:
             attempts = len(dataset) // 2
