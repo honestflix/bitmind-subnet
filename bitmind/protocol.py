@@ -44,8 +44,6 @@ def prepare_image_synapse(images, predictions):
 
     return ImageSynapse(images=b64_encoded_images, predictions=predictions)
 
-
-
 # ---- miner ----
 # Example usage:
 #   def miner_forward( synapse: ImageSynapse ) -> ImageSynapse:
@@ -70,7 +68,7 @@ class ImageSynapse(bt.Synapse):
     Attributes:
     - images: a list of bas64 encoded images
     - predictions: a list of floats (of equal length to images) indicating the probabilty that each
-        image is AI generated
+        image is AI generated. >.5 is considered a deepfake, <= 0.5 is considered real.
     """
 
     # Required request input, filled by sending dendrite caller.
