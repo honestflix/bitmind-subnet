@@ -1,0 +1,1 @@
+python ./neurons/validator.py --netuid 1 --subtensor.chain_endpoint ws://127.0.0.1:9946 --wallet.name validator --wallet.hotkey default --logging.trace --logging.info --logging.debug --neuron.vpermit_tao_limit 500
