@@ -58,32 +58,19 @@ else
     eval "$(conda shell.bash hook)"
 fi
 
-# Create and activate the 'subnet' environment
-if conda info --envs | grep -qw 'subnet'; then
-    echo "Conda environment 'subnet' already exists. Activating it..."
-else
-    echo "Creating Conda environment 'subnet'..."
-    conda create --name subnet -y
-fi
-
-echo "Activating Conda environment 'subnet'..."
-conda activate subnet
-
-echo "Conda environment 'subnet' is activated."
-
 # Clone the subtensor repository if not already cloned
 if [ ! -d "subtensor" ]; then
     echo "Cloning the subtensor repository..."
-    git clone https://github.com/opentensor/subtensor.git
+    cd ~ && git clone https://github.com/opentensor/subtensor.git
 else
     echo "Subtensor repository already cloned."
 fi
 
 
-
 # Setup Rust for Subtensor
 echo "Setting up Rust for Subtensor..."
-cd subtensor
+cd ~/subtensor
+git checkout main
 ./scripts/init.sh
 
 # Build the Subtensor binary with the faucet feature enabled
@@ -112,24 +99,9 @@ pm2 start ./scripts/localnet.sh --name localnet
 
 # Wait for the subnet to get started
 echo "Waiting for the local subnet to get started..."
-sleep 300
+sleep 60
 echo "Subnet is now started."
 
-
-
-# Install subnet template if not already cloned
-cd ..
-if [ ! -d "bittensor-subnet-template" ]; then
-    echo "Cloning the bittensor subnet template repository..."
-    git clone https://github.com/opentensor/bittensor-subnet-template.git
-else
-    echo "Bittensor subnet template repository already cloned."
-fi
-
-# Navigate to the cloned repository
-cd bittensor-subnet-template
-echo "Installing the bittensor-subnet-template Python package..."
-python -m pip install -e .
 
 # Create wallets for owner, miner, and validator
 echo "Creating wallets for owner, miner, and validator..."
@@ -140,9 +112,15 @@ btcli wallet new_coldkey --wallet.name validator
 btcli wallet new_hotkey --wallet.name validator --wallet.hotkey default
 
 # Mint tokens from faucet for owner and validator
-echo "Minting tokens from faucet..."
+echo "Minting tokens for owner (1000t required for subnet creation)..."
 btcli wallet faucet --wallet.name owner --subtensor.chain_endpoint ws://127.0.0.1:9946
+btcli wallet faucet --wallet.name owner --subtensor.chain_endpoint ws://127.0.0.1:9946
+btcli wallet faucet --wallet.name owner --subtensor.chain_endpoint ws://127.0.0.1:9946
+btcli wallet faucet --wallet.name owner --subtensor.chain_endpoint ws://127.0.0.1:9946
+
+echo "Minting tokens for validator and miner"
 btcli wallet faucet --wallet.name validator --subtensor.chain_endpoint ws://127.0.0.1:9946
+btcli wallet faucet --wallet.name miner --subtensor.chain_endpoint ws://127.0.0.1:9946
 
 # Create a subnet
 echo "Creating a subnet..."
