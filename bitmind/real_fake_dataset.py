@@ -35,12 +35,3 @@ class RealFakeDataset:
 
     def __len__(self):
         return min(len(self.real_image_dataset), len(self.fake_image_dataset))
-
-
-
-
-
-
-
-
-
