@@ -34,8 +34,6 @@ def prepare_image_synapse(images, predictions):
         if image is None:
             print("Warning: None image")
             continue
-
-        image = image.resize((256, 256))
         
         image_bytes = BytesIO()
         image.save(image_bytes, format="JPEG")
@@ -75,7 +73,7 @@ class ImageSynapse(bt.Synapse):
     images: List[str] = pydantic.Field(
         title="Images",
         description="A list of base64 encoded images to check",
-        allow_mutation=True
+        allow_mutation=False
     )
 
     # Optional request output, filled by receiving axon.
