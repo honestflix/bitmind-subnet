@@ -1,0 +1,3 @@
+[submodule "npr"]
+	path = npr
+	url = ./npr/
