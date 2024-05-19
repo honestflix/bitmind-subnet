@@ -21,24 +21,25 @@ def download_image(url):
         return None
 
 
-def load_huggingface_dataset(name):
+def load_huggingface_dataset(name, split=None):
     if 'imagefolder' in name:
         _, directory = name.split(':')
         return load_dataset(path='imagefolder', data_dir=directory, split='train')
     else:
-        return load_dataset(name, split='validation')
+        return load_dataset(name, split=split)
 
 
 class RealImageDataset:
 
     def __init__(
-            self,
-            huggingface_dataset_names: List[str]=['dalle-mini/open-images']
+        self,
+        huggingface_dataset_names: List[str]=['dalle-mini/open-images'],
+        splits: List[str] = ['train']
     ):
         self.huggingface_dataset_names = huggingface_dataset_names
         self.data_sources = {
-            name: load_huggingface_dataset(name)
-            for name in huggingface_dataset_names
+            name: load_huggingface_dataset(name, split)
+            for name, split in zip(huggingface_dataset_names, splits)
         }
         self.sampled_images_idx = defaultdict(list)
 
