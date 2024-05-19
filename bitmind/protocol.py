@@ -34,8 +34,6 @@ def prepare_image_synapse(images, predictions):
         if image is None:
             print("Warning: None image")
             continue
-
-        image = image.resize((256, 256))
         
         image_bytes = BytesIO()
         image.save(image_bytes, format="JPEG")
@@ -43,8 +41,6 @@ def prepare_image_synapse(images, predictions):
         b64_encoded_images.append(encoded)
 
     return ImageSynapse(images=b64_encoded_images, predictions=predictions)
-
-
 
 # ---- miner ----
 # Example usage:
@@ -70,14 +66,14 @@ class ImageSynapse(bt.Synapse):
     Attributes:
     - images: a list of bas64 encoded images
     - predictions: a list of floats (of equal length to images) indicating the probabilty that each
-        image is AI generated
+        image is AI generated. >.5 is considered a deepfake, <= 0.5 is considered real.
     """
 
     # Required request input, filled by sending dendrite caller.
     images: List[str] = pydantic.Field(
         title="Images",
         description="A list of base64 encoded images to check",
-        allow_mutation=True
+        allow_mutation=False
     )
 
     # Optional request output, filled by receiving axon.

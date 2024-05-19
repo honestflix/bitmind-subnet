@@ -48,7 +48,7 @@ class Validator(BaseValidatorNeuron):
         self.load_state()
 
         print("Loading open-images dataset")
-        self.real_dataset = RealImageDataset()
+        self.real_dataset = RealImageDataset(['dalle-mini/open-images'], ['test'])
         self.random_image_generator = RandomImageGenerator()
 
         self.results = defaultdict(list)

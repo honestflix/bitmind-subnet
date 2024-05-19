@@ -52,8 +52,8 @@ def reward(y_pred: np.array, y_true: np.array) -> Tuple[float, dict]:
 
     metrics = {
         'fp_score': 1 - fp / len(y_pred),
-        'precision': prec,
-        'recall': rec,
+        #'precision': prec,
+        #'recall': rec,
         'f1_score': f1,
         'ap_score': ap_score
     }

@@ -16,3 +16,4 @@ torchvision
 torchaudio
 #cudatoolkit
 datasets
+accelerate

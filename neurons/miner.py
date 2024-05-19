@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
 # developer: dubm
@@ -20,18 +19,23 @@
 
 from tensorflow.keras.models import load_model
 from PIL import Image
+import torchvision.transforms as transforms
 import bittensor as bt
 import tensorflow as tf
 import numpy as np
+import torch.nn as nn
+import torch
 import base64
 import time
 import typing
 import cv2
 import io
 
-from template.base.miner import BaseMinerNeuron
+from npr.networks.resnet import resnet50
+from bitmind.base.miner import BaseMinerNeuron
 from bitmind.protocol import ImageSynapse
 from bitmind.miner.predict import predict
+
 
 class Miner(BaseMinerNeuron):
     """
@@ -44,8 +48,10 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        with tf.device('/CPU:0'):
-            self.model = load_model(r'./mining_models/deepfake_detection_model.h5')  # todo put model path in config
+        self.model = resnet50(num_classes=1)
+        weight_path = 'mining_models/npr.pth'
+        self.model.load_state_dict(torch.load(weight_path, map_location='cpu'))
+        self.model.eval()
 
     async def forward(
         self, synapse: ImageSynapse
@@ -68,8 +74,8 @@ class Miner(BaseMinerNeuron):
             image_bytes = base64.b64decode(b64_image)
             image = Image.open(io.BytesIO(image_bytes))
             try:
-                probs = predict(self.model, image, device='/CPU:0')
-                synapse.predictions.append(probs[0])
+                pred = predict(self.model, image)
+                synapse.predictions.append(pred)
             except Exception as e:
                 print(f"ERROR: image {i} failed")
                 print(e)

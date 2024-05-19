@@ -1,18 +1,25 @@
-import tensorflow as tf
-import numpy as np
-import cv2
+import torchvision.transforms as transforms
 
 
-def predict(model, image, device='/CPU:0'):
-    x = np.array(image, dtype=np.float64)
+def CenterCrop():
+    def fn(img):
+        m = min(img.size)
+        return transforms.CenterCrop(m)(img)
+    return fn
 
-    if x.shape[0] != 256 or x.shape[1] != 256:
-        x = cv2.resize(x, (256, 256), interpolation=cv2.INTER_AREA)
+transform = transforms.Compose([
+    CenterCrop(),
+    #transforms.Lambda(lambda img: CenterCrop()(img)),
+    #transforms.CenterCrop(224),
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Lambda(lambda t: t.expand(3, -1, -1) if t.shape[0] == 1 else t),
+    #transforms.Lambda(lambda t: t.float() / 255.),
+    #transforms.Normalize( mean=MEAN['imagenet'], std=STD['imagenet'] ),
+])
 
-    x /= 255.0
-    if x.shape[-1] not in (1, 3):
-        x = np.stack([x, x, x], axis=-1)
-    x = np.expand_dims(x, axis=0)
 
-    with tf.device(device):
-        return model.predict(x)[0]
+def predict(model, image):
+    image = transform(image).unsqueeze(0).float()
+    out = model(image).sigmoid().flatten().tolist()
+    return out[0]

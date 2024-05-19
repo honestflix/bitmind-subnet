@@ -1,0 +1,3 @@
+[submodule "npr"]
+	path = NPR-DeepfakeDetection
+	url = ./npr/
