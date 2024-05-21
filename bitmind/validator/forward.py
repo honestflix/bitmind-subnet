@@ -29,7 +29,7 @@ import joblib
 
 from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse, prepare_image_synapse
-from bitmind.validator.reward import get_rewards, reward
+from bitmind.validator.reward import get_rewards
 
 
 
@@ -45,67 +45,34 @@ async def forward(self):
     """
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    # TODO put this in a config
-    total_images = 10
-    k_gen = np.random.randint(int(.35*total_images), int(.65*total_images))
-    k_real = total_images - k_gen
-
-    # TODO create RealGen dataset class
-    real_images = self.real_dataset.sample(k_real)
-    labels = [0] * len(real_images)
-    if self.gpu > 0:
-        gen_images = self.random_image_generator.generate(k=k_gen)
-        images = real_images + gen_images
-        labels += [1] * len(gen_images)
+    if np.random.rand() > .5:
+        print('sampling real image')
+        sample = self.real_dataset.sample(k=1)[0]
+        label = 0
     else:
-        bt.logging.warning('UNABLE TO GENERATE IMAGES')
-        images = real_images
+        print('generating fake image')
+        sample = self.random_image_generator.generate(k=1)[0]
+        label = 1
 
-    images_labels = list(zip(images, labels))
-    np.random.shuffle(images_labels)
+    image = sample['image'] 
 
-    image_samples = [s[0] for s in images_labels]
-    images = [sample['image'] for sample in image_samples]
-    labels = torch.FloatTensor([int(s[1]) for s in images_labels])
-
-    #for uid in miner_uids:
-    #    print("miner", uid, ":", self.metagraph.axons[uid])
-
-    print(f"Querying miners with {len(images)} images...")
-    # The dendrite client queries the network.
+    print(f"Querying {len(miner_uids)} miners...")
     responses = await self.dendrite(
-        # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a query.
-        synapse=prepare_image_synapse(images=images, predictions=[]),
-        # All responses have the deserialize function called on them before returning.
-        # You are encouraged to define your own deserialization function.
-        deserialize=True,
+        synapse=prepare_image_synapse(image=image),
+        deserialize=True
     )
 
-    miner_idx = np.argmax([len(r) for r in responses])
-    miner = responses[miner_idx]
+    rewards = get_rewards(label=label, responses=responses)
 
-    for image_sample, label, pred in zip(image_samples, labels, miner):
-        s = '[INCORRECT]' if np.round(pred) != label else '\t  '
-        print(s, image_sample['id'], label, pred)
-        self.results['challenge'].append(self.challenge)
-        self.results['image'].append(image_sample['id'])
-        self.results['label'].append(label)
-        self.results['prediction'].append(pred)
-        self.results['correct'].append(np.round(pred) == label)
-    self.challenge += 1
+    # debug outputs for rewards
+    print(f'{"real" if label == 0 else "fake"} image | source: {sample["id"]}')
+    for i, pred in enumerate(responses):
+        print(f'Miner uid: {miner_uids[i]} | prediction: {pred} | correct: {np.round(pred) == label} | reward: {rewards[i]}')
 
-    joblib.dump(self.results, 'results.pkl')
-
-    # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")
-    # TODO why is self passed here in the bittensor template? overkill for moving response to device
-    rewards, metrics = get_rewards(labels=labels, responses=responses)
-    print('Miner Rewards:', rewards[miner_idx])
-    #print(metrics)
-
     bt.logging.info(f"Scored responses: {rewards}")
+    
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     rewards = rewards.to('cuda')
     miner_uids = miner_uids.to('cuda')

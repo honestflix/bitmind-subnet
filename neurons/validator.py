@@ -51,9 +51,6 @@ class Validator(BaseValidatorNeuron):
         self.real_dataset = RealImageDataset(['dalle-mini/open-images'], ['test'])
         self.random_image_generator = RandomImageGenerator()
 
-        self.results = defaultdict(list)
-        self.challenge = 0
-
     async def forward(self):
         """
         Validator forward pass. Consists of:
