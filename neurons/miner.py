@@ -68,19 +68,15 @@ class Miner(BaseMinerNeuron):
             ImageSynapse: The synapse object with the 'predictions' field populated with a list of probabilities
 
         """
-        print("RECEIVED", len(synapse.images), 'IMAGES')
-
-        for i, b64_image in enumerate(synapse.images):
-            image_bytes = base64.b64decode(b64_image)
+        try:
+            image_bytes = base64.b64decode(synapse.image)
             image = Image.open(io.BytesIO(image_bytes))
-            try:
-                pred = predict(self.model, image)
-                synapse.predictions.append(pred)
-            except Exception as e:
-                print(f"ERROR: image {i} failed")
-                print(e)
+            pred = predict(self.model, image)
+            synapse.prediction = pred
+        except Exception as e:
+            print(e)
 
-        print("PREDICTIONS:", synapse.predictions)
+        print("PREDICTION:", synapse.prediction)
         return synapse
 
     async def blacklist(
