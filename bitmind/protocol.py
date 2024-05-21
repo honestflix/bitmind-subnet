@@ -27,20 +27,11 @@ import pydantic
 import base64
 
 
-def prepare_image_synapse(images, predictions):
-
-    b64_encoded_images = []
-    for image in images:
-        if image is None:
-            print("Warning: None image")
-            continue
-        
-        image_bytes = BytesIO()
-        image.save(image_bytes, format="JPEG")
-        encoded = base64.b64encode(image_bytes.getvalue())
-        b64_encoded_images.append(encoded)
-
-    return ImageSynapse(images=b64_encoded_images, predictions=predictions)
+def prepare_image_synapse(image, prediction):
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="JPEG")
+    b64_encoded_image = base64.b64encode(image_bytes.getvalue())
+    return ImageSynapse(image=b64_encoded_image, prediction=prediction)
 
 # ---- miner ----
 # Example usage:
@@ -64,22 +55,22 @@ class ImageSynapse(bt.Synapse):
     the miner and the validator.
 
     Attributes:
-    - images: a list of bas64 encoded images
-    - predictions: a list of floats (of equal length to images) indicating the probabilty that each
-        image is AI generated. >.5 is considered a deepfake, <= 0.5 is considered real.
+    - image: a bas64 encoded images
+    - predictions: a floats indicating the probabilty that the image is AI generated/modified. 
+        >.5 is considered generated/modified, <= 0.5 is considered real.
     """
 
     # Required request input, filled by sending dendrite caller.
-    images: List[str] = pydantic.Field(
-        title="Images",
-        description="A list of base64 encoded images to check",
+    image: str = pydantic.Field(
+        title="Image",
+        description="A base64 encoded image",
         allow_mutation=False
     )
 
     # Optional request output, filled by receiving axon.
-    predictions: List[float] = pydantic.Field(
-        title="Predictions",
-        description="A list of deep fake probabilities"
+    prediction: List[float] = pydantic.Field(
+        title="Prediction",
+        description="Probability that the image is AI generated/modified"
     )
 
     def deserialize(self) -> List[float]:
@@ -91,4 +82,4 @@ class ImageSynapse(bt.Synapse):
         - List[float]: The deserialized response, which in this case is the list of deepfake
         prediction probabilities
         """
-        return self.predictions
+        return self.prediction
