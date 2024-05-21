@@ -27,11 +27,11 @@ import pydantic
 import base64
 
 
-def prepare_image_synapse(image, prediction):
+def prepare_image_synapse(image):
     image_bytes = BytesIO()
     image.save(image_bytes, format="JPEG")
     b64_encoded_image = base64.b64encode(image_bytes.getvalue())
-    return ImageSynapse(image=b64_encoded_image, prediction=prediction)
+    return ImageSynapse(image=b64_encoded_image, prediction=-1.)
 
 # ---- miner ----
 # Example usage:
@@ -68,9 +68,10 @@ class ImageSynapse(bt.Synapse):
     )
 
     # Optional request output, filled by receiving axon.
-    prediction: List[float] = pydantic.Field(
+    prediction: float = pydantic.Field(
         title="Prediction",
-        description="Probability that the image is AI generated/modified"
+        description="Probability that the image is AI generated/modified",
+        allow_mutation=True
     )
 
     def deserialize(self) -> List[float]:
