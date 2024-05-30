@@ -65,20 +65,22 @@ class RandomImageGenerator:
 
         #response = generator(
         # starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
-        response = self.prompt_generator(
-            starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1, truncation=True)
+        attempts = 10
+        for _ in range(attempts):
+            response = self.prompt_generator(
+                starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1, truncation=True)
 
-        response_list = []
-        for x in response:
-            resp = x['generated_text'].strip()
-            if resp != starting_text and len(resp) > (len(starting_text) + 4) and resp.endswith((":", "-", "—")) is False:
-                response_list.append(resp+'\n')
+            response_list = []
+            for x in response:
+                resp = x['generated_text'].strip()
+                if resp != starting_text and len(resp) > (len(starting_text) + 4) and resp.endswith((":", "-", "—")) is False:
+                    response_list.append(resp+'\n')
 
-        response_end = "\n".join(response_list)
-        response_end = re.sub('[^ ]+\.[^ ]+','', response_end)
-        response_end = response_end.replace("<", "").replace(">", "")
+            response_end = "\n".join(response_list)
+            response_end = re.sub('[^ ]+\.[^ ]+','', response_end)
+            response_end = response_end.replace("<", "").replace(">", "")
 
-        if response_end != "":
-            return response_end
+            if response_end != "":
+                return response_end
 
 
