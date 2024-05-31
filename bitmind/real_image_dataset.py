@@ -21,12 +21,28 @@ def download_image(url):
         return None
 
 
-def load_huggingface_dataset(name, split=None):
+def load_huggingface_dataset(name, split=None, create_splits=False):
     if 'imagefolder' in name:
         _, directory = name.split(':')
-        return load_dataset(path='imagefolder', data_dir=directory, split='train')
+        dataset = load_dataset(path='imagefolder', data_dir=directory, split='train')
     else:
-        return load_dataset(name, split=split)
+        dataset = load_dataset(name)#, split=split)
+
+    if not create_splits:
+        return dataset[split]
+
+    dataset = dataset.shuffle(seed=42)
+
+    split_dataset = {}
+    train_test_split = dataset['train'].train_test_split(test_size=0.2, seed=42)
+    split_dataset['train'] = train_test_split['train']
+    temp_dataset = train_test_split['test']
+
+    # Split the temporary dataset into validation and test
+    val_test_split = temp_dataset.train_test_split(test_size=0.5, seed=42)
+    split_dataset['validation'] = val_test_split['train']
+    split_dataset['test'] = val_test_split['test']
+    return split_dataset[split]
 
 
 class RealImageDataset:
@@ -34,11 +50,12 @@ class RealImageDataset:
     def __init__(
         self,
         huggingface_dataset_names: List[str]=['dalle-mini/open-images'],
-        splits: List[str] = ['train']
+        splits: List[str] = ['train'],
+        create_splits: bool = False
     ):
         self.huggingface_dataset_names = huggingface_dataset_names
         self.data_sources = {
-            name: load_huggingface_dataset(name, split)
+            name: load_huggingface_dataset(name, split, create_splits)
             for name, split in zip(huggingface_dataset_names, splits)
         }
         self.sampled_images_idx = defaultdict(list)
@@ -62,12 +79,19 @@ class RealImageDataset:
         elif 'image' in sample:
             if isinstance(sample['image'], Image.Image):
                 image = sample['image']
+            elif isinstance(sample['image'], bytes):
+                image = Image.open(BytesIO(sample['image']))
             else:
                 raise NotImplementedError
 
             image_id = ''
             if 'name' in sample:
                 image_id = sample['name']
+            elif 'filename' in sample:
+                 image_id = sample['filename']
+
+            image_id = image_id if image_id != '' else index
+
         else:
             raise NotImplementedError
 
