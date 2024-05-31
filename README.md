@@ -6,7 +6,6 @@
 
 - [Introduction](#introduction)
 - [Setup](#setup)
-- [Quickstart](#quickstart)
 - [Mining](#mining)
 - [Validating](#validating)
 - [License](#license)
@@ -30,6 +29,7 @@ Join us at the Deep Fake Image Detection Subnet, your partner in maintaining dig
 ## Setup
 
 ### Local Subtensor Setup
+
 To run locally follow Bittensor's <a href="https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_staging.md">Running on Staging docs</a> to get a local version of Bittensor running
 
 - After cloning the subtensor repository (step 3), make sure to checkout the main branch before running the subsequent build step (step 4)<br>
