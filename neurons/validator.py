@@ -49,7 +49,7 @@ class Validator(BaseValidatorNeuron):
 
         print("Loading open-images dataset")
         self.real_dataset = RealImageDataset(['dalle-mini/open-images'], ['test'])
-        self.random_image_generator = RandomImageGenerator()
+        self.random_image_generator = RandomImageGenerator(diffuser_name='random')
 
     async def forward(self):
         """
