@@ -9,12 +9,10 @@ import random
 import time
 import re
 import gc
+import os
 
-VALID_PROMPT_GENERATOR_NAMES = ['Gustavosta/MagicPrompt-Stable-Diffusion']
-VALID_DIFFUSER_NAMES = [
-    'stabilityai/stable-diffusion-xl-base-1.0',
-    'SG161222/RealVisXL_V4.0'
-]
+from bitmind.utils.constants import VALID_PROMPT_GENERATOR_NAMES, VALID_DIFFUSER_NAMES, ANIMALS
+
 
 class RandomImageGenerator:
 
@@ -22,6 +20,7 @@ class RandomImageGenerator:
         self,
         prompt_generator_name='Gustavosta/MagicPrompt-Stable-Diffusion',
         diffuser_name='SG161222/RealVisXL_V4.0',
+        image_cache_dir=None
     ):
 
         assert prompt_generator_name in VALID_PROMPT_GENERATOR_NAMES, 'invalid prompt generator name'
@@ -29,6 +28,9 @@ class RandomImageGenerator:
 
         self.prompt_generator_name = prompt_generator_name
         self.diffuser_name = diffuser_name
+        self.image_cache_dir = image_cache_dir
+        if image_cache_dir is not None:
+            os.makedirs(self.image_cache_dir, exist_ok=True)
 
         bt.logging.info(f"Loading prompt generation model ({prompt_generator_name})...")
         self.prompt_generator = pipeline(
@@ -68,12 +70,15 @@ class RandomImageGenerator:
         for prompt in prompts:
             image_name = f"{time.time()}.jpg"
             gen_image = self.diffuser(prompt=prompt).images[0]
-            gen_image.save(image_name)
             gen_data.append({
                 'prompt': prompt,
                 'image': gen_image,
                 'id': image_name
             })
+            if self.image_cache_dir is not None:
+                path = os.path.join(self.image_cache_dir, image_name)
+                print(path)
+                gen_image.save(path)
 
         return gen_data
 
@@ -98,17 +103,17 @@ class RandomImageGenerator:
         seed = random.randint(100, 1000000)
         set_seed(seed)
 
-        #response = generator(
-        # starting_text, max_length=(len(starting_text) + random.randint(60, 90)), num_return_sequences=4)
-
         starters = [
             'A photorealistic portrait',
+            'A photorealistic image of a person',
             'A photorealistic landscape',
             'A photorealistic scene'
         ]
-
-        context = [
-            'RAW photo', 'subject', '8k uhd', 'dslr', 'soft lighting', 'high quality', 'film grain', 'Fujifilm XT3'
+        quality = [
+            'RAW photo', 'subject', '8k uhd',  'soft lighting', 'high quality', 'film grain'
+        ]
+        device = [
+            'Fujifilm XT3', 'iphone', 'canon EOS r8' , 'dslr',
         ]
 
         for _ in range(retry_attempts):
@@ -116,21 +121,16 @@ class RandomImageGenerator:
             response = self.prompt_generator(
                 starting_text, max_length=(77 - len(starting_text)), num_return_sequences=1, truncation=True)
 
-            response_list = []
-            for x in response:
-                resp = x['generated_text'].strip()
-                if resp != starting_text and len(resp) > (len(starting_text) + 4) and resp.endswith((":", "-", "—")) is False:
-                    response_list.append(resp+'\n')
+            prompt = response[0]['generated_text'].strip()
+            if np.any([word.lower() in ANIMALS for word in prompt.split(' ')]):
+                continue
 
-            prompt = "\n".join(response_list)
             prompt = re.sub('[^ ]+\.[^ ]+','', prompt)
             prompt = prompt.replace("<", "").replace(">", "")
 
             # temporary removal of extra context (like "featured on artstation") until we've trained our own prompt generator
             prompt = re.split('[,;]', prompt)[0] + ', '
-            prompt += ', '.join(np.random.choice(context, np.random.randint(len(context)//2, len(context))))
-
+            prompt += ', '.join(np.random.choice(quality, np.random.randint(len(quality)//2, len(quality))))
+            prompt += ', ' + np.random.choice(device, 1)[0]
             if prompt != "":
                 return prompt
-
-
