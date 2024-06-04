@@ -29,7 +29,9 @@ def load_huggingface_dataset(name, split=None, create_splits=False):
         dataset = load_dataset(name)#, split=split)
 
     if not create_splits:
-        return dataset[split]
+        if split is not None:
+            return dataset[split]
+        return dataset
 
     dataset = dataset.shuffle(seed=42)
 
@@ -49,30 +51,25 @@ class RealImageDataset:
 
     def __init__(
         self,
-        huggingface_dataset_names: List[str]=['dalle-mini/open-images'],
-        splits: List[str] = ['train'],
+        huggingface_dataset_name: str,
+        split: str = 'train',
         create_splits: bool = False
     ):
-        self.huggingface_dataset_names = huggingface_dataset_names
-        self.data_sources = {
-            name: load_huggingface_dataset(name, split, create_splits)
-            for name, split in zip(huggingface_dataset_names, splits)
-        }
-        self.sampled_images_idx = defaultdict(list)
+        self.huggingface_dataset_name = huggingface_dataset_name
+        self.dataset = load_huggingface_dataset(huggingface_dataset_name, split, create_splits)
+        self.sampled_images_idx = []
 
     def __getitem__(self, index):
-        # TODO get from multiple source options
-        source = np.random.choice(self.huggingface_dataset_names, 1)[0]
-        return self._get_image(source, index)
+        return self._get_image(index)
+
     def __len__(self):
-        # todo factor in multidataset
-        return len(self.data_sources[self.huggingface_dataset_names[0]])
+        return len(self.dataset)
 
-    def _get_image(self, data_source, index):
+    def _get_image(self, index):
         """
 
         """
-        sample = self.data_sources[data_source][int(index)]
+        sample = self.dataset[int(index)]
         if 'url' in sample:
             image = download_image(sample['url'])
             image_id = sample['url']
@@ -107,27 +104,25 @@ class RealImageDataset:
     def sample(self, k=1):
         """
         """
-        data_source = np.random.choice(self.huggingface_dataset_names, 1)[0]
-        #print(f"Sampling {k} real images from {data_source}...")
-
-        dataset = self.data_sources[data_source]
         sampled_images = []
+        sampled_idx = []
         while k > 0:
-            attempts = len(dataset) // 2
+            attempts = len(self.dataset) // 2
             for i in range(attempts):
-                image_idx = np.random.randint(0, len(dataset))
-                if data_source not in self.sampled_images_idx or image_idx not in self.sampled_images_idx[data_source]:
+                image_idx = np.random.randint(0, len(self.dataset))
+                if image_idx not in self.sampled_images_idx:
                     break
                 if i >= attempts:
-                    self.sampled_images_idx[data_source] = []
+                    self.sampled_images_idx = []
             try:
-                image = self._get_image(data_source, image_idx)
+                image = self._get_image(image_idx)
                 if image['image'] is not None:
                     sampled_images.append(image)
-                    self.sampled_images_idx[data_source].append(image_idx)
+                    sampled_idx.append(image_idx)
+                    self.sampled_images_idx.append(image_idx)
                     k -= 1
             except Exception as e:
                 print(e)
                 continue
 
-        return sampled_images
+        return sampled_images, sampled_idx
