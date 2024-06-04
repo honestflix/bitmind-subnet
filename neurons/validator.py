@@ -47,9 +47,18 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
 
-        print("Loading open-images dataset")
-        self.real_dataset = RealImageDataset(['dalle-mini/open-images'], ['test'])
-        self.random_image_generator = RandomImageGenerator()
+        print("Loading real datasets")
+        real_image_dataset_meta = [
+            {'name': 'dalle-mini/open-images', 'create_splits': False},
+            {'name': 'merkol/ffhq-256', 'create_splits': True},
+            {'name': 'jlbaker361/flickr_humans_20k', 'create_splits': True},
+            {'name': 'saitsharipov/CelebA-HQ', 'create_splits': True}
+        ]
+        self.real_image_datasets = [
+            RealImageDataset(ds['name'], 'test', ds['create_splits']) for ds in real_image_dataset_meta
+        ]
+
+        self.random_image_generator = RandomImageGenerator(diffuser_name='random')
 
     async def forward(self):
         """

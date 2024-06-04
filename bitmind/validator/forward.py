@@ -43,11 +43,13 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
+    #print(f"k={self.config.neuron.sample_size}")
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
     if np.random.rand() > .5:
         print('sampling real image')
-        sample = self.real_dataset.sample(k=1)[0]
+        real_dataset = self.real_image_datasets[np.random.randint(0, len(self.real_image_datasets))]
+        sample = real_dataset.sample(k=1)[0]
         label = 0
     else:
         print('generating fake image')
@@ -68,6 +70,8 @@ async def forward(self):
     # debug outputs for rewards
     print(f'{"real" if label == 0 else "fake"} image | source: {sample["id"]}')
     for i, pred in enumerate(responses):
+        if pred == -1:
+            continue
         print(f'Miner uid: {miner_uids[i]} | prediction: {pred} | correct: {np.round(pred) == label} | reward: {rewards[i]}')
 
     bt.logging.info(f"Received responses: {responses}")
