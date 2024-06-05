@@ -140,8 +140,11 @@ def process_weights_for_netuid(
 
     # Find all non zero weights.
     non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
+    if not isinstance(non_zero_weight_idx, np.ndarray):
+        non_zero_weight_idx = np.array([non_zero_weight_idx])
     non_zero_weight_uids = uids[non_zero_weight_idx]
     non_zero_weights = weights[non_zero_weight_idx]
+
     if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
         bittensor.logging.warning("No non-zero weights returning all ones.")
         final_weights = np.ones((metagraph.n)) / metagraph.n
@@ -168,6 +171,7 @@ def process_weights_for_netuid(
     max_exclude = max(0, len(non_zero_weights) - min_allowed_weights) / len(
         non_zero_weights
     )
+
     exclude_quantile = min([quantile, max_exclude])
     lowest_quantile = np.quantile(non_zero_weights, exclude_quantile)
     bittensor.logging.debug("max_exclude", max_exclude)
