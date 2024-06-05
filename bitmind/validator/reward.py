@@ -18,7 +18,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-import torch
 from typing import List
 import bittensor as bt
 import numpy as np
@@ -39,7 +38,7 @@ def count_penalty(y_pred: float) -> float:
 def get_rewards(
         label: float,
         responses: List,
-    ) -> torch.FloatTensor:
+    ) -> np.array:
     """
     Returns a tensor of rewards for the given query and responses.
 
@@ -48,7 +47,7 @@ def get_rewards(
     - responses (List[float]): A list of responses from the miners.
 
     Returns:
-    - torch.FloatTensor: A tensor of rewards for the given query and responses.
+    - np.array: A tensor of rewards for the given query and responses.
     """
     miner_rewards = []
     for uid in range(len(responses)):
@@ -64,4 +63,4 @@ def get_rewards(
             bt.logging.exception(e)
             miner_rewards.append(0)
 
-    return torch.FloatTensor(miner_rewards)
+    return np.array(miner_rewards)
