@@ -1,9 +1,19 @@
 # Rethinking the Up-Sampling Operations in CNN-based Generative Network for Generalizable Deepfake Detection
 
+<hr style="border:2px solid gray">
+
+Our base miner code is taken from the [NPR-DeepfakeDetection respository](https://github.com/chuangchuangtan/NPR-DeepfakeDetection). Huge thank you to the authors for their work on their CVPR paper and this codebase!<br>
+-- Bitmind Devs
+
+<hr style="border:2px solid gray">
+
+
 <p align="center">
 	<br>
 	Beijing Jiaotong University, YanShan University, A*Star
 </p>
+<br>
+
 
 <img src="./NPR.png" width="100%" alt="overall pipeline">
 
