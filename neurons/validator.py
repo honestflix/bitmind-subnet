@@ -27,7 +27,7 @@ from collections import defaultdict
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
 from bitmind.random_image_generator import RandomImageGenerator
-from bitmind.real_image_dataset import RealImageDataset
+from bitmind.image_dataset import ImageDataset
 
 
 class Validator(BaseValidatorNeuron):
@@ -55,7 +55,7 @@ class Validator(BaseValidatorNeuron):
             {'name': 'saitsharipov/CelebA-HQ', 'create_splits': True}
         ]
         self.real_image_datasets = [
-            RealImageDataset(ds['name'], 'test', ds['create_splits']) for ds in real_image_dataset_meta
+            ImageDataset(ds['name'], 'test', ds['create_splits']) for ds in real_image_dataset_meta
         ]
 
         self.random_image_generator = RandomImageGenerator(use_random_diffuser=True, diffuser_name=None)
