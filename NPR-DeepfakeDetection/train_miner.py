@@ -57,15 +57,6 @@ def load_datasets():
     return real_datasets, fake_datasets
 
 def create_real_fake_datasets(real_datasets, fake_datasets):
-    MEAN = {
-        "imagenet":[0.485, 0.456, 0.406],
-        "clip":[0.48145466, 0.4578275, 0.40821073]
-    }
-
-    STD = {
-        "imagenet":[0.229, 0.224, 0.225],
-        "clip":[0.26862954, 0.26130258, 0.27577711]
-    }
 
     def CenterCrop():
         def fn(img):
@@ -75,7 +66,6 @@ def create_real_fake_datasets(real_datasets, fake_datasets):
     
     transform = transforms.Compose([
         CenterCrop(),
-        #transforms.CenterCrop(224),
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Lambda(lambda t: t.expand(3, -1, -1) if t.shape[0] == 1 else t),
