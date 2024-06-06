@@ -58,7 +58,7 @@ class Validator(BaseValidatorNeuron):
             RealImageDataset(ds['name'], 'test', ds['create_splits']) for ds in real_image_dataset_meta
         ]
 
-        self.random_image_generator = RandomImageGenerator(diffuser_name='random')
+        self.random_image_generator = RandomImageGenerator(use_random_diffuser=True, diffuser_name=None)
 
     async def forward(self):
         """
