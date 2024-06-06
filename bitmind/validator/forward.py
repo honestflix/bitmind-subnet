@@ -30,7 +30,7 @@ import joblib
 from bitmind.utils.uids import get_random_uids
 from bitmind.protocol import ImageSynapse, prepare_image_synapse
 from bitmind.validator.reward import get_rewards
-
+from bitmind.validator.transforms import random_image_transforms
 
 
 async def forward(self):
@@ -46,17 +46,19 @@ async def forward(self):
     #print(f"k={self.config.neuron.sample_size}")
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    if np.random.rand() > .5:
+    if np.random.rand() > 0.5:
         print('sampling real image')
         real_dataset = self.real_image_datasets[np.random.randint(0, len(self.real_image_datasets))]
+        source_name = real_dataset.huggingface_dataset_name
         sample = real_dataset.sample(k=1)[0][0]
         label = 0
     else:
         print('generating fake image')
         sample = self.random_image_generator.generate(k=1)[0]
+        source_name = self.random_image_generator.diffuser_name
         label = 1
 
-    image = sample['image'] 
+    image = random_image_transforms(sample['image'])
 
     print(f"Querying {len(miner_uids)} miners...")
     responses = await self.dendrite(
@@ -68,7 +70,7 @@ async def forward(self):
     rewards = get_rewards(label=label, responses=responses)
 
     # debug outputs for rewards
-    print(f'{"real" if label == 0 else "fake"} image | source: {sample["id"]}')
+    print(f'{"real" if label == 0 else "fake"} image | source: {source_name}: {sample["id"]}')
     for i, pred in enumerate(responses):
         print(f'Miner uid: {miner_uids[i]} | prediction: {pred} | correct: {np.round(pred) == label} | reward: {rewards[i]}')
 
