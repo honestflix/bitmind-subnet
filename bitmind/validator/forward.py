@@ -74,8 +74,6 @@ async def forward(self):
 
     bt.logging.info(f"Received responses: {responses}")
     bt.logging.info(f"Scored responses: {rewards}")
-    
+
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
-    rewards = rewards.to('cuda')
-    miner_uids = miner_uids.to('cuda')
     self.update_scores(rewards, miner_uids)
