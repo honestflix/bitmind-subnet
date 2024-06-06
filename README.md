@@ -41,7 +41,7 @@ To run locally follow Bittensor's <a href="https://github.com/opentensor/bittens
 
 Before you proceed with the installation of the subnet, note the following:
 
-**IMPORTANT**: We **strongly recommend** before proceeding that you test both subtensor and all API keys. Ensure you are running Subtensor locally to minimize chances of outages and improve the latency/connection. See [Run a Subtensor Node Locally](https://github.com/opentensor/subtensor/blob/main/docs/running-subtensor-locally.md#compiling-your-own-binary)
+**IMPORTANT**: We **strongly recommend** before proceeding that you ensure you are running Subtensor locally to minimize chances of outages and improve the latency/connection. See [Run a Subtensor Node Locally](https://github.com/opentensor/subtensor/blob/main/docs/running-subtensor-locally.md#compiling-your-own-binary)
 
 **IMPORTANT:** Make sure you are aware of the minimum compute requirements for bitmind subnet. See the [Minimum compute YAML configuration](./min_compute.yml).
 
@@ -63,7 +63,7 @@ conda activate deepfake
 Download the repository, navigate to the folder and then install the necessary requirements with the following chained command.
 
 ```bash
-git clone https://github.com/bitmind-ai/bitmind-subnet.git && cd bitmind-subnet && pip
+git clone https://github.com/bitmind-ai/bitmind-subnet.git && cd bitmind-subnet
 conda create -n bitmind python=3.10 ipython
 conda activate bitmind
 export PIP_NO_CACHE_DIR=1
@@ -77,33 +77,19 @@ Prior to proceeding, ensure you have a registered hotkey on subnet XX testnet. I
 btcli s register --netuid XX --wallet.name [wallet_name] --wallet.hotkey [wallet.hotkey] --subtensor.network test
 ```
 
-### Getting Data
+### Training a Model (more details coming soon)
 
-1. Create a Kaggle Account
-2. Get a Kaggle API Key - but kaggle.json in `$HOME/.kaggle/` directory
-3. Run:
-
-```python
-python base_miner/get_data.py
-```
-
-You can also manually download the dataset here: [CIFAKE Dataset](https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images).
-Create a directory called `data` in base_miner and move the `test` and `train` image directories into the `data` directory.
-
-### Training a Model
-
-1. Modify `model.py` to improve performance of the base model
-2. Run:
+1. Modify `train_miner.py` to improve performance of the base model
+2. To train, run:
 
 ```python
-python base_miner/model.py
+python NPR-DeepfakeDetection/model.py
 ```
 
 ### Model Prediction / Inference
 
-```python
-python base_miner/predict.py
-```
+- `neurons/miner.py` and `bitmind/miner/predict.py` contain code for loading a trained model and predicting on single images
+- More scripts and notebooks for batch predictions and model evaluation coming soon!
 
 ## Mining
 
