@@ -20,14 +20,22 @@ class RandomImageGenerator:
         self,
         prompt_generator_name='Gustavosta/MagicPrompt-Stable-Diffusion',
         diffuser_name='SG161222/RealVisXL_V4.0',
+        use_random_diffuser=False,
         image_cache_dir=None
     ):
 
         assert prompt_generator_name in VALID_PROMPT_GENERATOR_NAMES, 'invalid prompt generator name'
-        assert diffuser_name == 'random' or diffuser_name in VALID_DIFFUSER_NAMES, 'invalid diffuser name'
+        assert use_random_diffuser or diffuser_name in VALID_DIFFUSER_NAMES, 'invalid diffuser name'
 
+        if use_random_diffuser and diffuser_name is not None:
+            print("Warning: diffuser_name will be ignored (use_random_diffuser=True)")
+            self.diffuser_name = None
+        else:
+            self.diffuser_name = diffuser_name
+
+        self.use_random_diffuser = use_random_diffuser
         self.prompt_generator_name = prompt_generator_name
-        self.diffuser_name = diffuser_name
+
         self.image_cache_dir = image_cache_dir
         if image_cache_dir is not None:
             os.makedirs(self.image_cache_dir, exist_ok=True)
@@ -39,7 +47,7 @@ class RandomImageGenerator:
             tokenizer='gpt2',
             device=-1)
 
-        if diffuser_name != 'random':
+        if diffuser_name is not None:
             bt.logging.info(f"Loading image generation model ({diffuser_name})...")
             self.diffuser = DiffusionPipeline.from_pretrained(
                 diffuser_name,
@@ -56,7 +64,7 @@ class RandomImageGenerator:
         """
 
         """
-        if self.diffuser_name == 'random':
+        if self.use_random_diffuser:
             self.load_random_diffuser()
 
         print("Generating prompts...")
@@ -77,7 +85,6 @@ class RandomImageGenerator:
             })
             if self.image_cache_dir is not None:
                 path = os.path.join(self.image_cache_dir, image_name)
-                print(path)
                 gen_image.save(path)
 
         return gen_data
@@ -92,6 +99,7 @@ class RandomImageGenerator:
 
         diffuser_name = np.random.choice(VALID_DIFFUSER_NAMES, 1)[0]
         bt.logging.info(f"Loading image generation model ({diffuser_name})...")
+        self.diffuser_name = diffuser_name
         self.diffuser = DiffusionPipeline.from_pretrained(
             diffuser_name,
             torch_dtype=torch.float16,
