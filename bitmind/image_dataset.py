@@ -47,7 +47,7 @@ def load_huggingface_dataset(name, split=None, create_splits=False):
     return split_dataset[split]
 
 
-class RealImageDataset:
+class ImageDataset:
 
     def __init__(
         self,
