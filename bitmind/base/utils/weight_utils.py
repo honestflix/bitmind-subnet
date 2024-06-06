@@ -140,8 +140,9 @@ def process_weights_for_netuid(
 
     # Find all non zero weights.
     non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
-    if not isinstance(non_zero_weight_idx, np.ndarray):
-        non_zero_weight_idx = np.array([non_zero_weight_idx])
+    if non_zero_weight_idx.ndim == 0:
+        non_zero_weight_idx = non_zero_weight_idx.reshape((1,))
+
     non_zero_weight_uids = uids[non_zero_weight_idx]
     non_zero_weights = weights[non_zero_weight_idx]
 
