@@ -27,6 +27,18 @@ import torch
 
 def load_datasets():
     splits = ['train', 'validation', 'test']
+
+    fake_datasets = {split: [] for split in splits}
+    fake_image_dataset_meta = [
+        {'name': 'bitmind/RealVisXL_V4.0_images', 'create_splits': True}
+    ]
+
+    for split in splits:
+        for dataset_meta in fake_image_dataset_meta:
+            dataset = RealImageDataset(dataset_meta['name'], split, dataset_meta['create_splits'])
+            fake_datasets[split].append(dataset)
+            print(f"Loaded {dataset_meta['name']}[{split}], len={len(dataset)}")
+
     real_datasets = {split: [] for split in splits}
     real_image_dataset_meta = [
         {'name': 'dalle-mini/open-images', 'create_splits': False},
@@ -41,17 +53,6 @@ def load_datasets():
             real_datasets[split].append(dataset)
             print(f"Loaded {dataset_meta['name']}[{split}], len={len(dataset)}")
     
-    
-    fake_datasets = {split: [] for split in splits}
-    fake_image_dataset_meta = [
-        {'name': 'imagefolder:../bitmind/data/RealVisXL_V.40', 'create_splits': False}
-    ]
-    
-    for split in splits:
-        for dataset_meta in fake_image_dataset_meta:
-            dataset = RealImageDataset(dataset_meta['name'] + '/' + split, None, dataset_meta['create_splits'])
-            fake_datasets[split].append(dataset)
-            print(f"Loaded {dataset_meta['name']}[{split}], len={len(dataset)}")
 
     return real_datasets, fake_datasets
 
