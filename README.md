@@ -14,13 +14,14 @@
 
 **IMPORTANT**: If you are new to Bittensor, please review the [Bittensor Website](https://bittensor.com/) before proceeding to the [Setup](#setup) section.
 
+
 Introducing Bittensor Subnet X (Deep Fake Image Detection Subnet): A Platform for Identifying and Mitigating Deep Fake Image Content.
 
-The Deep Fake Image Detection Subnet is at the vanguard of cybersecurity and digital authenticity, providing a robust solution tailored for developers and researchers in the fields of AI and image analysis. This platform is intricately designed to offer accurate, real-time detection of deep fake images through API usage, leveraging the decentralized Bittensor network. It is a pivotal tool in the quest to ensure the integrity of digital media by facilitating the incentivized detection and mitigation of manipulated content.
+The Deep Fake Image Detection Subnet is at the vanguard of digital authenticity, providing a novel ecosystem  tailored for AI developers and researchers to advance the field of fake content detection. This platform is intricately designed to offer accurate, real-time detection of deep fake images through API usage, leveraging the decentralized Bittensor network. It is a pivotal tool in the quest to ensure the integrity of digital media by facilitating the incentivized detection and mitigation of generated and manipulated content.
 
-Our initiative marks a significant advancement in securing digital environments, addressing the growing concerns over deep fake technology. By focusing on delivering consistent and reliable detection results, we aim to alleviate the issues of misinformation and digital deception that pervade modern media. The quality and reliability of the Deep Fake Image Detection Subnet are seamlessly integrated within the Bittensor network, enabling developers to utilize multiple subnets and modalities by integrating directly with an existing validator or via an API key from BitMind.
+Our initiative marks a significant advancement in securing digital environments, addressing the growing concerns over deep fake technology. By iteratively expanding the subnet’s coverage to a wide range of content types, we aim to alleviate the issues of misinformation and digital deception that pervade modern media. The quality and reliability of the Deep Fake Image Detection Subnet are inherently tied to the decentralized nature of the Bittensor network, mitigating the centralization risk of single-model approaches to this problem space.Our easy-to-use frontend acts as an interface to our miner pool, which realizes and democratizes access to a high-fidelity ensemble of predictors.
 
-The Deep Fake Image Detection Subnet also employs advanced AI models to enhance its detection capabilities, continuously evolving to counteract new methods of image manipulation. This approach involves generating and analyzing synthetic data to improve detection algorithms, akin to the strategies used by leading AI researchers. By iterating on model outputs and utilizing data augmentation techniques, we ensure our detection models are both sophisticated and efficient, mirroring the performance of state-of-the-art AI technologies. This democratizes access to high-quality detection tools, encouraging widespread adoption and innovation.
+The Deep Fake Image Detection Subnet employs advanced generative and discriminative AI models to enhance its detection capabilities, continuously evolving to counteract new methods of image manipulation. This approach involves generating and analyzing synthetic data to improve detection algorithms, akin to the strategies used by leading AI researchers.. Our base miner is based on the 2024 CVPR Paper Rethinking the Up-Sampling Operations in CNN-based Generative Network for Generalizable Deepfake Detection, which introduces a novel metric called Neighborhood Pixel Relationships to guide the training of popular Convolutional Neural Networks (CNNs) to learn features specific to artifacts present in generated images.
 
 By harnessing synthetic data, the Deep Fake Image Detection Subnet overcomes traditional data collection challenges, accelerating the development of robust and adaptive AI models. This platform is your gateway to mastering digital authenticity, offering the unique opportunity to train your models with data that captures the intricacies of deep fake detection. With our advanced tools and methodologies, you're not just identifying deep fakes; you're safeguarding the truth, providing a pathway to creating AI models that uphold the highest standards of digital integrity.
 
@@ -79,12 +80,14 @@ btcli s register --netuid XX --wallet.name [wallet_name] --wallet.hotkey [wallet
 
 ### Training a Model (more details coming soon)
 
-1. Modify `train_miner.py` to improve performance of the base model
+1. Modify `base_miner/train_miner.py` to improve performance of the base model.
 2. To train, run:
 
 ```python
-python NPR-DeepfakeDetection/model.py
+cd base_miner && python train_miner.py
 ```
+
+To see performance improvements, you'll need to train on more data, modify hyperparameters, or try a different modeling strategy altogether.
 
 ### Model Prediction / Inference
 

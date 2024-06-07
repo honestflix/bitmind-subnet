@@ -17,17 +17,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from datasets import load_dataset
 import bittensor as bt
-import numpy as np
 import time
-import torch
-from collections import defaultdict
 
 from bitmind.validator import forward
 from bitmind.base.validator import BaseValidatorNeuron
 from bitmind.random_image_generator import RandomImageGenerator
-from bitmind.real_image_dataset import RealImageDataset
+from bitmind.image_dataset import ImageDataset
+from bitmind.data_sources import DATASET_META
 
 
 class Validator(BaseValidatorNeuron):
@@ -42,23 +39,15 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        self.gpu = 1  # TODO get from config
-
         bt.logging.info("load_state()")
         self.load_state()
 
         print("Loading real datasets")
-        real_image_dataset_meta = [
-            {'name': 'dalle-mini/open-images', 'create_splits': False},
-            {'name': 'merkol/ffhq-256', 'create_splits': True},
-            {'name': 'jlbaker361/flickr_humans_20k', 'create_splits': True},
-            {'name': 'saitsharipov/CelebA-HQ', 'create_splits': True}
-        ]
         self.real_image_datasets = [
-            RealImageDataset(ds['name'], 'test', ds['create_splits']) for ds in real_image_dataset_meta
+            ImageDataset(ds['name'], 'test', ds['create_splits']) for ds in DATASET_META['real']
         ]
 
-        self.random_image_generator = RandomImageGenerator(diffuser_name='random')
+        self.random_image_generator = RandomImageGenerator(use_random_diffuser=True, diffuser_name=None)
 
     async def forward(self):
         """

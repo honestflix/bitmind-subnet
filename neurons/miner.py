@@ -31,7 +31,7 @@ import typing
 import cv2
 import io
 
-from npr.networks.resnet import resnet50
+from base_miner.networks.resnet import resnet50
 from bitmind.base.miner import BaseMinerNeuron
 from bitmind.protocol import ImageSynapse
 from bitmind.miner.predict import predict
