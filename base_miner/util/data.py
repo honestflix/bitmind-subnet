@@ -1,6 +1,7 @@
 import torchvision.transforms as transforms
 from bitmind.real_fake_dataset import RealFakeDataset
 from bitmind.image_dataset import ImageDataset
+from bitmind.data_sources import DATASET_META
 
 
 def load_datasets():
@@ -12,26 +13,15 @@ def load_datasets():
     splits = ['train', 'validation', 'test']
 
     fake_datasets = {split: [] for split in splits}
-    fake_image_dataset_meta = [
-        {'name': 'bitmind/RealVisXL_V4.0_images', 'create_splits': True}
-    ]
-
     for split in splits:
-        for dataset_meta in fake_image_dataset_meta:
+        for dataset_meta in DATASET_META['fake']:
             dataset = ImageDataset(dataset_meta['name'], split, dataset_meta['create_splits'])
             fake_datasets[split].append(dataset)
             print(f"Loaded {dataset_meta['name']}[{split}], len={len(dataset)}")
 
     real_datasets = {split: [] for split in splits}
-    real_image_dataset_meta = [
-        {'name': 'dalle-mini/open-images', 'create_splits': False},
-        {'name': 'merkol/ffhq-256', 'create_splits': True},
-        {'name': 'jlbaker361/flickr_humans_20k', 'create_splits': True},
-        {'name': 'saitsharipov/CelebA-HQ', 'create_splits': True}
-    ]
-
     for split in splits:
-        for dataset_meta in real_image_dataset_meta:
+        for dataset_meta in DATASET_META['real']:
             dataset = ImageDataset(dataset_meta['name'], split, dataset_meta['create_splits'])
             real_datasets[split].append(dataset)
             print(f"Loaded {dataset_meta['name']}[{split}], len={len(dataset)}")
