@@ -80,12 +80,14 @@ btcli s register --netuid XX --wallet.name [wallet_name] --wallet.hotkey [wallet
 
 ### Training a Model (more details coming soon)
 
-1. Modify `train_miner.py` to improve performance of the base model
+1. Modify `base_miner/train_miner.py` to improve performance of the base model.
 2. To train, run:
 
 ```python
-python NPR-DeepfakeDetection/model.py
+cd base_miner && python train_miner.py
 ```
+
+To see performance improvements, you'll need to train on more data, modify hyperparameters, or try a different modeling strategy altogether.
 
 ### Model Prediction / Inference
 
